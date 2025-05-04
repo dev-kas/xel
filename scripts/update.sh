@@ -122,7 +122,7 @@ check_current_version() {
     print_info "Checking current version..."
     
     if [ -x "$BINARY_PATH" ]; then
-        CURRENT_VERSION=$("$BINARY_PATH" --version 2>/dev/null || echo "unknown")
+        CURRENT_VERSION=$("$BINARY_PATH" --version 2>/dev/null | grep -o "v[0-9]*\.[0-9]*\.[0-9]*" || echo "unknown")
         print_info "Current version: $CURRENT_VERSION"
     else
         print_warning "Could not determine current version."
@@ -209,7 +209,7 @@ verify_update() {
     print_info "Verifying update..."
     
     if [ -x "$BINARY_PATH" ]; then
-        NEW_VERSION=$("$BINARY_PATH" --version 2>/dev/null || echo "unknown")
+        NEW_VERSION=$("$BINARY_PATH" --version 2>/dev/null | grep -o "v[0-9]*\.[0-9]*\.[0-9]*" || echo "unknown")
         print_info "Updated to version: $NEW_VERSION"
         
         if [ "$NEW_VERSION" = "$CURRENT_VERSION" ] && [ "$NEW_VERSION" != "unknown" ]; then
@@ -217,6 +217,11 @@ verify_update() {
         else
             print_success "Xel has been updated successfully!"
         fi
+        
+        # Show help message
+        print_info "You can now use Xel by running: xel"
+        print_info "For help, run: xel --help"
+        print_info "To check version, run: xel --version"
     else
         print_error "Update verification failed. Please check your installation."
         exit 1

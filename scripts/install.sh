@@ -178,8 +178,16 @@ verify_installation() {
     
     if [ -f "$BINARY_PATH" ]; then
         print_success "Installation successful!"
+        
+        # Display the installed version
+        if [ -x "$BINARY_PATH" ]; then
+            VERSION=$("$BINARY_PATH" --version 2>/dev/null | grep -o "v[0-9]*\.[0-9]*\.[0-9]*" || echo "unknown")
+            print_info "Installed Xel version: $VERSION"
+        fi
+        
         print_info "You can now use Xel by running: xel"
         print_info "For help, run: xel --help"
+        print_info "To check version, run: xel --version"
     else
         print_error "Installation failed. The binary was not found at $BINARY_PATH."
         exit 1

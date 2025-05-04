@@ -66,6 +66,16 @@ The compiled binaries will be available in the `bin` directory.
 
 ## Usage
 
+### Basic Commands
+
+```bash
+# Check version
+xel --version
+
+# Show help
+xel --help
+```
+
 ### Running VirtLang Scripts
 
 ```bash
@@ -122,6 +132,17 @@ make test
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request. See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
+
+## Release Process
+
+Xel uses GitHub Actions for continuous integration and automated releases:
+
+1. Every push to the main branch and pull requests are automatically built and tested
+2. To create a new release:
+   - Create and push a new tag with the version number: `git tag v1.0.0 && git push origin v1.0.0`
+   - GitHub Actions will automatically build the binaries for all platforms
+   - A new GitHub Release will be created with the binaries attached
+   - The installation scripts will automatically use the latest release
 
 ## Acknowledgements
 

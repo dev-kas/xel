@@ -9,10 +9,15 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+// Version is the current version of Xel
+// This will be overridden during build by using ldflags
+var Version = "dev"
+
 func main() {
 	app := &cli.App{
 		Name:     "xel",
 		Usage:    "A runtime for VirtLang",
+		Version:  Version,
 		Commands: cmds.GetCommands(),
 	}
 
