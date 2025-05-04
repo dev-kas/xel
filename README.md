@@ -35,15 +35,15 @@ The compiled binaries will be available in the `bin` directory.
 
 ```bash
 # Basic usage
-xel run script.vl
+xel run script.xel
 
 # With arguments (for future implementation)
-xel run script.vl arg1 arg2 arg3
+xel run script.xel arg1 arg2 arg3
 ```
 
 ### Example VirtLang Script
 
-Create a file named `example.vl` with the following content:
+Create a file named `example.xel` with the following content:
 
 ```
 // Define a function
@@ -58,7 +58,7 @@ add(10, 20)
 Run it with:
 
 ```bash
-xel run example.vl
+xel run example.xel
 ```
 
 Output:

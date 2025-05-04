@@ -3,6 +3,7 @@ package cmds
 import (
 	"fmt"
 	"os"
+	"strings"
 	"xel/engine"
 
 	"github.com/urfave/cli/v2"
@@ -17,15 +18,20 @@ func RunCommand() *cli.Command {
 			if c.NArg() < 1 {
 				return fmt.Errorf("filename is required")
 			}
-			
+
 			filename := c.Args().Get(0)
-			
+
+			// Check if file has .xel extension
+			if !strings.HasSuffix(filename, ".xel") {
+				return fmt.Errorf("file must have .xel extension")
+			}
+
 			// Check if file exists
 			_, err := os.Stat(filename)
 			if os.IsNotExist(err) {
 				return fmt.Errorf("file %s does not exist", filename)
 			}
-			
+
 			// Get remaining arguments
 			args := []string{}
 			if c.NArg() > 1 {
@@ -33,19 +39,19 @@ func RunCommand() *cli.Command {
 					args = append(args, c.Args().Get(i))
 				}
 			}
-			
+
 			// Read file content
 			content, err := os.ReadFile(filename)
 			if err != nil {
 				return fmt.Errorf("failed to read file %s: %v", filename, err)
 			}
-			
+
 			// Pass content to the engine
 			result, err := engine.Eval(string(content))
 			if err != nil {
 				return fmt.Errorf("execution failed: %v", err)
 			}
-			
+
 			// Print the result
 			if result != nil {
 				// Check if the result has a Value field (assuming RuntimeValue has a Value field)
@@ -63,7 +69,7 @@ func RunCommand() *cli.Command {
 			} else {
 				fmt.Println("Execution completed successfully with no return value")
 			}
-			
+
 			return nil
 		},
 	}
