@@ -1,0 +1,68 @@
+name: Build and Release
+
+on:
+  push:
+    # Trigger on tag pushes that match v*, e.g., v1.0.0, v20.15.10
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    name: Build and Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Needed for creating releases
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Fetch all history for tags
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'  # Adjust to your Go version
+
+      - name: Extract version from tag
+        id: get_version
+        run: |
+          # Remove 'v' prefix from tag name
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+
+      - name: Build for all platforms
+        run: |
+          # Build for all platforms with version from tag
+          make build-all VERSION=$VERSION
+          
+          # Create directory for release assets
+          mkdir -p release-assets
+          
+          # Copy and rename binaries to include version
+          cp bin/xel-darwin-arm64 release-assets/xel-v${VERSION}-darwin-arm64
+          cp bin/xel-linux-amd64 release-assets/xel-v${VERSION}-linux-amd64
+          cp bin/xel-windows-amd64.exe release-assets/xel-v${VERSION}-windows-amd64.exe
+          
+          # Also copy with standard names for the install scripts
+          cp bin/xel-darwin-arm64 release-assets/xel-darwin-arm64
+          cp bin/xel-linux-amd64 release-assets/xel-linux-amd64
+          cp bin/xel-windows-amd64.exe release-assets/xel-windows-amd64.exe
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Xel v${{ steps.get_version.outputs.version }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            release-assets/xel-v${{ steps.get_version.outputs.version }}-darwin-arm64
+            release-assets/xel-v${{ steps.get_version.outputs.version }}-linux-amd64
+            release-assets/xel-v${{ steps.get_version.outputs.version }}-windows-amd64.exe
+            release-assets/xel-darwin-arm64
+            release-assets/xel-linux-amd64
+            release-assets/xel-windows-amd64.exe

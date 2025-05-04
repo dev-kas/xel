@@ -12,6 +12,7 @@ Thank you for your interest in contributing to Xel! This document provides guide
 - [Testing](#testing)
 - [Building](#building)
 - [Documentation](#documentation)
+- [Release Process](#release-process)
 - [Issue Reporting](#issue-reporting)
 - [Feature Requests](#feature-requests)
 
@@ -124,6 +125,58 @@ The project includes a Makefile with several targets:
 - Document all public APIs
 - Keep README.md updated with the latest information
 - Add examples for new features
+
+## Versioning
+
+Xel follows [Semantic Versioning](https://semver.org/) (SemVer):
+
+- **MAJOR** version for incompatible API changes (X.0.0)
+- **MINOR** version for backward-compatible functionality additions (0.X.0)
+- **PATCH** version for backward-compatible bug fixes (0.0.X)
+
+The version is set in the main.go file and is overridden during build using ldflags.
+
+## Release Process
+
+Xel uses GitHub Actions for continuous integration and automated releases:
+
+### Continuous Integration
+
+- Every push to the main branch and pull requests are automatically built and tested
+- The CI workflow is defined in `.github/workflows/ci.yml`
+- CI builds include a development version number based on the git commit hash
+
+### Creating a New Release
+
+Only project maintainers should create official releases. The process is:
+
+1. Ensure all tests pass and the code is ready for release
+2. Update version references in documentation if necessary
+3. Create and push a new tag with the version number following SemVer:
+   ```bash
+   git tag v1.0.0
+   git push origin v1.0.0
+   ```
+4. The release workflow (`.github/workflows/release.yml`) will automatically:
+   - Build binaries for all supported platforms
+   - Create a GitHub Release with the binaries attached
+   - Generate release notes based on commits since the last release
+
+### Versioning
+
+Xel follows [Semantic Versioning](https://semver.org/):
+
+- **MAJOR** version for incompatible API changes
+- **MINOR** version for backward-compatible functionality additions
+- **PATCH** version for backward-compatible bug fixes
+
+### Release Candidates
+
+For significant changes, consider using release candidates:
+```bash
+git tag v1.0.0-rc1
+git push origin v1.0.0-rc1
+```
 
 ## Issue Reporting
 
