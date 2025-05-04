@@ -8,17 +8,19 @@ set -e # Exit immediately if a command exits with a non-zero status
 
 # Parse command line arguments
 FORCE_UNINSTALL=false
-while [ $# -gt 0 ]; do
-    case "$1" in
-        -y|--yes)
-            FORCE_UNINSTALL=true
-            shift
-            ;;
-        *)
-            shift
-            ;;
-    esac
+
+# Check if -y is passed as an argument
+for arg in "$@"; do
+    if [ "$arg" = "-y" ] || [ "$arg" = "--yes" ]; then
+        FORCE_UNINSTALL=true
+        break
+    fi
 done
+
+# Also check if the first argument contains -y (for cases where sh -s -- -y gets mangled)
+if [ -n "$1" ] && echo "$1" | grep -q -- "-y"; then
+    FORCE_UNINSTALL=true
+fi
 
 # Print colored output
 print_info() {
@@ -127,14 +129,13 @@ uninstall_binary() {
                 read -r -t 300 CONFIRM  # 5-minute timeout
             fi
         else
-            # Being piped from curl, provide clear instructions
+            # Being piped from curl, provide clear instructions and exit with helpful message
             print_warning "This script is being run via curl pipe."
-            print_warning "To continue with uninstallation of Xel from $BINARY_PATH, type 'y' and press Enter."
-            print_warning "To cancel, press Enter or type anything else."
-            print_warning "Waiting for input..."
-            
-            # Wait for input
-            read -r CONFIRM
+            print_warning "For non-interactive uninstallation, use:"
+            print_warning "curl -fsSL https://raw.githubusercontent.com/dev-kas/xel/master/scripts/uninstall.sh | sh -s -- -y"
+            print_warning ""
+            print_warning "Uninstallation cancelled. Please run again with the -y flag as shown above."
+            exit 0
         fi
         
         if [ "$CONFIRM" != "y" ] && [ "$CONFIRM" != "Y" ]; then
