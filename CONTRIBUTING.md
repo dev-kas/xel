@@ -62,7 +62,7 @@ By participating in this project, you are expected to uphold our Code of Conduct
 3. **Keep your branch updated** with the upstream repository
    ```bash
    git fetch upstream
-   git rebase upstream/main
+   git rebase upstream/master
    ```
 
 4. **Push your changes** to your fork
@@ -72,7 +72,7 @@ By participating in this project, you are expected to uphold our Code of Conduct
 
 ## Pull Request Process
 
-1. **Submit a pull request** from your forked repository to the main repository
+1. **Submit a pull request** from your forked repository to the master branch of the main repository
 2. **Ensure your PR description** clearly describes the problem and solution
 3. **Include issue numbers** in your PR description (e.g., "Fixes #123")
 4. **Update documentation** if necessary
@@ -142,7 +142,7 @@ Xel uses GitHub Actions for continuous integration and automated releases:
 
 ### Continuous Integration
 
-- Every push to the main branch and pull requests are automatically built and tested
+- Every push to the master branch and pull requests are automatically built and tested
 - The CI workflow is defined in `.github/workflows/ci.yml`
 - CI builds include a development version number based on the git commit hash
 

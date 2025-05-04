@@ -16,7 +16,7 @@ Xel is a runtime for VirtLang, a lightweight programming language designed for s
 You can install Xel with a single command:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/dev-kas/xel/main/scripts/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/dev-kas/xel/master/scripts/install.sh | sh
 ```
 
 This will automatically detect your operating system and architecture, download the appropriate binary, and install it to your system.
@@ -26,7 +26,7 @@ This will automatically detect your operating system and architecture, download 
 To update to the latest version:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/dev-kas/xel/main/scripts/update.sh | sh
+curl -fsSL https://raw.githubusercontent.com/dev-kas/xel/master/scripts/update.sh | sh
 ```
 
 #### Uninstall Xel
@@ -34,7 +34,7 @@ curl -fsSL https://raw.githubusercontent.com/dev-kas/xel/main/scripts/update.sh 
 To remove Xel from your system:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/dev-kas/xel/main/scripts/uninstall.sh | sh
+curl -fsSL https://raw.githubusercontent.com/dev-kas/xel/master/scripts/uninstall.sh | sh
 ```
 
 ### Manual Installation
@@ -137,7 +137,7 @@ Contributions are welcome! Please feel free to submit a Pull Request. See [CONTR
 
 Xel uses GitHub Actions for continuous integration and automated releases:
 
-1. Every push to the main branch and pull requests are automatically built and tested
+1. Every push to the master branch and pull requests are automatically built and tested
 2. To create a new release:
    - Create and push a new tag with the version number: `git tag v1.0.0 && git push origin v1.0.0`
    - GitHub Actions will automatically build the binaries for all platforms
