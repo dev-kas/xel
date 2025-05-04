@@ -1,0 +1,7 @@
+// Define a function
+fn add(a, b) {
+  return a + b
+}
+
+// Call the function
+add(10, 20)
