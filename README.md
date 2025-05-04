@@ -11,6 +11,41 @@ Xel is a runtime for VirtLang, a lightweight programming language designed for s
 
 ## Installation
 
+### Quick Install (Linux, macOS, Windows with WSL)
+
+You can install Xel with a single command:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/dev-kas/xel/main/scripts/install.sh | sh
+```
+
+This will automatically detect your operating system and architecture, download the appropriate binary, and install it to your system.
+
+#### Update Xel
+
+To update to the latest version:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/dev-kas/xel/main/scripts/update.sh | sh
+```
+
+#### Uninstall Xel
+
+To remove Xel from your system:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/dev-kas/xel/main/scripts/uninstall.sh | sh
+```
+
+### Manual Installation
+
+1. Download the appropriate binary for your platform from the [releases page](https://github.com/dev-kas/xel/releases/latest)
+2. Rename it to `xel` (or `xel.exe` on Windows)
+3. Make it executable (on Unix-like systems): `chmod +x xel`
+4. Move it to a directory in your PATH:
+   - Linux/macOS: `/usr/local/bin` or `~/.local/bin`
+   - Windows: Create a directory and add it to your PATH
+
 ### From Source
 
 ```bash
