@@ -25,9 +25,20 @@ for arg in "$@"; do
     fi
 done
 
-# For debugging
-echo "Arguments received: $@"
-echo "Force uninstall flag: $FORCE_UNINSTALL"
+# Special handling for curl | sh -s -- -y pattern
+# The -y might be passed as a separate argument or combined with other flags
+if [ $# -eq 0 ] && [ ! -t 0 ]; then
+    # No arguments but being piped - check if we can read a line without blocking
+    # This is a hack to handle the case where -y is passed but not properly forwarded
+    if read -t 1 first_line; then
+        if echo "$first_line" | grep -q -- "-y"; then
+            FORCE_UNINSTALL=true
+            # Put the line back for the rest of the script
+            exec echo "$first_line" | cat - /dev/stdin | "$0" -y
+            exit $?
+        fi
+    fi
+fi
 
 # Print colored output
 print_info() {
