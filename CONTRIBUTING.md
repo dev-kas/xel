@@ -35,7 +35,7 @@ By participating in this project, you are expected to uphold our Code of Conduct
    ```
 3. **Add the upstream repository** as a remote
    ```bash
-   git remote add upstream https://github.com/ORIGINAL-OWNER/xel.git
+   git remote add upstream https://github.com/dev-kas/xel.git
    ```
 4. **Install dependencies**
    ```bash
