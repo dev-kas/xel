@@ -1,4 +1,4 @@
-VERSION ?= dev
+VERSION ?= 0.1.3
 
 test:
 	go test ./...
