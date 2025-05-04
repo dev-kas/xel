@@ -13,3 +13,5 @@ build-windows:
 	GOOS='windows' GOARCH='amd64' go build -ldflags="-X main.Version=$(VERSION)" -o ./bin/xel-windows-amd64.exe
 
 build: build-mac build-linux build-windows
+
+build-all: build
