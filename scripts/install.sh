@@ -181,7 +181,7 @@ verify_installation() {
         
         # Display the installed version
         if [ -x "$BINARY_PATH" ]; then
-            VERSION=$("$BINARY_PATH" --version 2>/dev/null | grep -o "[0-9]\+\.[0-9]\+\.[0-9]\+" || echo "unknown")
+            VERSION=$("$BINARY_PATH" --version 2>/dev/null | awk '{print $NF}' || echo "unknown")
             print_info "Installed Xel version: $VERSION"
         fi
         

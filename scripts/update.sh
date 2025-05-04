@@ -122,7 +122,7 @@ check_current_version() {
     print_info "Checking current version..."
     
     if [ -x "$BINARY_PATH" ]; then
-        CURRENT_VERSION=$("$BINARY_PATH" --version 2>/dev/null | grep -o "[0-9]\+\.[0-9]\+\.[0-9]\+" || echo "unknown")
+        CURRENT_VERSION=$("$BINARY_PATH" --version 2>/dev/null | awk '{print $NF}' || echo "unknown")
         print_info "Current version: $CURRENT_VERSION"
     else
         print_warning "Could not determine current version."
@@ -209,7 +209,7 @@ verify_update() {
     print_info "Verifying update..."
     
     if [ -x "$BINARY_PATH" ]; then
-        NEW_VERSION=$("$BINARY_PATH" --version 2>/dev/null | grep -o "v[0-9]*\.[0-9]*\.[0-9]*" || echo "unknown")
+        NEW_VERSION=$("$BINARY_PATH" --version 2>/dev/null | awk '{print $NF}' || echo "unknown")
         print_info "Updated to version: $NEW_VERSION"
         
         if [ "$NEW_VERSION" = "$CURRENT_VERSION" ] && [ "$NEW_VERSION" != "unknown" ]; then
