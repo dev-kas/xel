@@ -96,7 +96,14 @@ uninstall_binary() {
     
     # Ask for confirmation
     printf "Are you sure you want to uninstall Xel from %s? [y/N] " "$BINARY_PATH"
-    read -r CONFIRM
+    # Use read with a timeout to ensure it waits for input
+    if [ "$OS" = "darwin" ]; then
+        # macOS doesn't support -t option for read
+        read -r CONFIRM
+    else
+        # Linux and other systems
+        read -r -t 300 CONFIRM  # 5-minute timeout
+    fi
     
     if [ "$CONFIRM" != "y" ] && [ "$CONFIRM" != "Y" ]; then
         print_info "Uninstallation cancelled."
