@@ -2,8 +2,23 @@
 # Xel Uninstaller
 # This script uninstalls Xel from your system
 # Usage: curl -fsSL https://raw.githubusercontent.com/dev-kas/xel/master/scripts/uninstall.sh | sh
+# Or with forced uninstallation: curl -fsSL https://raw.githubusercontent.com/dev-kas/xel/master/scripts/uninstall.sh | sh -s -- -y
 
 set -e # Exit immediately if a command exits with a non-zero status
+
+# Parse command line arguments
+FORCE_UNINSTALL=false
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -y|--yes)
+            FORCE_UNINSTALL=true
+            shift
+            ;;
+        *)
+            shift
+            ;;
+    esac
+done
 
 # Print colored output
 print_info() {
@@ -94,32 +109,38 @@ find_binary() {
 uninstall_binary() {
     print_info "Uninstalling Xel..."
     
-    # Check if script is being piped from curl
-    if [ -t 0 ]; then
-        # Terminal is interactive, ask for confirmation
-        printf "Are you sure you want to uninstall Xel from %s? [y/N] " "$BINARY_PATH"
-        # Use read with a timeout to ensure it waits for input
-        if [ "$OS" = "darwin" ]; then
-            # macOS doesn't support -t option for read
-            read -r CONFIRM
-        else
-            # Linux and other systems
-            read -r -t 300 CONFIRM  # 5-minute timeout
-        fi
+    # Skip confirmation if force flag is set
+    if [ "$FORCE_UNINSTALL" = "true" ]; then
+        print_info "Force uninstall flag detected. Proceeding without confirmation."
+        CONFIRM="y"
     else
-        # Being piped from curl, provide clear instructions
-        print_warning "This script is being run via curl pipe."
-        print_warning "To continue with uninstallation of Xel from $BINARY_PATH, type 'y' and press Enter."
-        print_warning "To cancel, press Enter or type anything else."
-        print_warning "Waiting for input..."
+        # Check if script is being piped from curl
+        if [ -t 0 ]; then
+            # Terminal is interactive, ask for confirmation
+            printf "Are you sure you want to uninstall Xel from %s? [y/N] " "$BINARY_PATH"
+            # Use read with a timeout to ensure it waits for input
+            if [ "$OS" = "darwin" ]; then
+                # macOS doesn't support -t option for read
+                read -r CONFIRM
+            else
+                # Linux and other systems
+                read -r -t 300 CONFIRM  # 5-minute timeout
+            fi
+        else
+            # Being piped from curl, provide clear instructions
+            print_warning "This script is being run via curl pipe."
+            print_warning "To continue with uninstallation of Xel from $BINARY_PATH, type 'y' and press Enter."
+            print_warning "To cancel, press Enter or type anything else."
+            print_warning "Waiting for input..."
+            
+            # Wait for input
+            read -r CONFIRM
+        fi
         
-        # Wait for input
-        read -r CONFIRM
-    fi
-    
-    if [ "$CONFIRM" != "y" ] && [ "$CONFIRM" != "Y" ]; then
-        print_info "Uninstallation cancelled."
-        exit 0
+        if [ "$CONFIRM" != "y" ] && [ "$CONFIRM" != "Y" ]; then
+            print_info "Uninstallation cancelled."
+            exit 0
+        fi
     fi
     
     # Remove the binary

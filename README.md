@@ -37,6 +37,12 @@ To remove Xel from your system:
 curl -fsSL https://raw.githubusercontent.com/dev-kas/xel/master/scripts/uninstall.sh | sh
 ```
 
+To uninstall without confirmation (useful for automated scripts):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/dev-kas/xel/master/scripts/uninstall.sh | sh -s -- -y
+```
+
 ### Manual Installation
 
 1. Download the appropriate binary for your platform from the [releases page](https://github.com/dev-kas/xel/releases/latest)
