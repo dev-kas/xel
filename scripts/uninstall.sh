@@ -17,10 +17,17 @@ for arg in "$@"; do
     fi
 done
 
-# Also check if the first argument contains -y (for cases where sh -s -- -y gets mangled)
-if [ -n "$1" ] && echo "$1" | grep -q -- "-y"; then
-    FORCE_UNINSTALL=true
-fi
+# Also check if any argument contains -y (for cases where sh -s -- -y gets mangled)
+for arg in "$@"; do
+    if [ -n "$arg" ] && echo "$arg" | grep -q -- "-y"; then
+        FORCE_UNINSTALL=true
+        break
+    fi
+done
+
+# For debugging
+echo "Arguments received: $@"
+echo "Force uninstall flag: $FORCE_UNINSTALL"
 
 # Print colored output
 print_info() {
