@@ -1,30 +1,92 @@
-# Xel CLI
+# Xel
 
-A minimal command-line tool built with Go.
+Xel is a runtime for VirtLang, a lightweight programming language designed for simplicity and extensibility. Xel provides an environment for executing VirtLang code.
+
+## Features
+
+- **VirtLang Execution**: Run VirtLang scripts with a simple command
+- **Cross-Platform**: Available for macOS, Linux, and Windows
+- **Lightweight**: Minimal dependencies and fast startup time
+- **Extensible**: Designed to be extended with additional functionality
 
 ## Installation
 
+### From Source
+
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/xel.git
+git clone https://github.com/dev-kas/xel.git
 cd xel
 
-# Build the binary
+# Build for your platform
 make build
+
+# Or build for a specific platform
+make build-mac    # macOS (arm64)
+make build-linux  # Linux (amd64)
+make build-windows # Windows (amd64)
 ```
+
+The compiled binaries will be available in the `bin` directory.
 
 ## Usage
 
-```bash
-# Run a file with arguments
-xel run filename arg1 arg2 arg3
+### Running VirtLang Scripts
 
-# Initialize a new project (unimplemented)
+```bash
+# Basic usage
+xel run script.vl
+
+# With arguments (for future implementation)
+xel run script.vl arg1 arg2 arg3
+```
+
+### Example VirtLang Script
+
+Create a file named `example.vl` with the following content:
+
+```
+// Define a function
+fn add(a, b) {
+  return a + b
+}
+
+// Call the function
+add(10, 20)
+```
+
+Run it with:
+
+```bash
+xel run example.vl
+```
+
+Output:
+```
+Result: 30
+```
+
+### Future Commands
+
+```bash
+# Initialize a new project (coming soon)
 xel init
 
-# Install a package (unimplemented)
+# Install a package (coming soon)
 xel install package-name
 ```
+
+## Development
+
+### Running Tests
+
+```bash
+make test
+```
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 

@@ -12,7 +12,7 @@ import (
 func main() {
 	app := &cli.App{
 		Name:     "xel",
-		Usage:    "A minimal CLI tool",
+		Usage:    "A runtime for VirtLang",
 		Commands: cmds.GetCommands(),
 	}
 

@@ -1,0 +1,11 @@
+// Test with different data types
+let num = 42
+let str = "Hello, VirtLang!"
+
+// Test with a function
+fn add(a, b) {
+  return a + b
+}
+
+// Call the function
+add(10, 20)
