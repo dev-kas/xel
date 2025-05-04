@@ -20,6 +20,9 @@ jobs:
         with:
           go-version: '1.23.2'  # Updated to match VirtLang-Go requirements
 
+      - name: Update dependencies
+        run: go mod tidy
+
       - name: Build
         run: |
           # Set development version for CI builds

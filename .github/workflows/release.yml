@@ -33,6 +33,9 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Building version: $VERSION"
 
+      - name: Update dependencies
+        run: go mod tidy
+
       - name: Build for all platforms
         run: |
           # Build for all platforms with version from tag
