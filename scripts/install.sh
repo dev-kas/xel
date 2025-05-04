@@ -1,7 +1,7 @@
 #!/bin/sh
 # Xel Installer
 # This script installs Xel, a runtime for VirtLang
-# Usage: curl -fsSL https://raw.githubusercontent.com/dev-kas/xel/main/scripts/install.sh | sh
+# Usage: curl -fsSL https://raw.githubusercontent.com/dev-kas/xel/master/scripts/install.sh | sh
 
 set -e # Exit immediately if a command exits with a non-zero status
 

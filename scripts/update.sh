@@ -1,7 +1,7 @@
 #!/bin/sh
 # Xel Updater
 # This script updates Xel to the latest version
-# Usage: curl -fsSL https://raw.githubusercontent.com/dev-kas/xel/main/scripts/update.sh | sh
+# Usage: curl -fsSL https://raw.githubusercontent.com/dev-kas/xel/master/scripts/update.sh | sh
 
 set -e # Exit immediately if a command exits with a non-zero status
 
@@ -113,7 +113,7 @@ find_binary() {
     done
     
     print_error "Could not find Xel installation. Please install Xel first."
-    print_info "You can install Xel with: curl -fsSL https://raw.githubusercontent.com/dev-kas/xel/main/scripts/install.sh | sh"
+    print_info "You can install Xel with: curl -fsSL https://raw.githubusercontent.com/dev-kas/xel/master/scripts/install.sh | sh"
     exit 1
 }
 

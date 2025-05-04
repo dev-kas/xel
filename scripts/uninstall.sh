@@ -1,7 +1,7 @@
 #!/bin/sh
 # Xel Uninstaller
 # This script uninstalls Xel from your system
-# Usage: curl -fsSL https://raw.githubusercontent.com/dev-kas/xel/main/scripts/uninstall.sh | sh
+# Usage: curl -fsSL https://raw.githubusercontent.com/dev-kas/xel/master/scripts/uninstall.sh | sh
 
 set -e # Exit immediately if a command exits with a non-zero status
 
