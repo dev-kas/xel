@@ -86,7 +86,11 @@ make test
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please feel free to submit a Pull Request. See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
+
+## Acknowledgements
+
+Special thanks to [@dev-kas](https://github.com/dev-kas) for creating the VirtLang project, without which Xel would not be possible. VirtLang serves as the foundation for this runtime environment.
 
 ## License
 
