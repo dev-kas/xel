@@ -36,7 +36,7 @@ jobs:
       - name: Build for all platforms
         run: |
           # Build for all platforms with version from tag
-          make build-all VERSION=$VERSION
+          make build VERSION=$VERSION
           
           # Create directory for release assets
           mkdir -p release-assets
