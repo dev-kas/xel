@@ -38,7 +38,7 @@ func TestEval(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := Eval(tt.input)
+			result, err := Eval(tt.input, nil)
 			
 			// Check error expectation
 			if (err != nil) != tt.wantErr {

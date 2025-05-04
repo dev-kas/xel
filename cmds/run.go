@@ -5,7 +5,11 @@ import (
 	"os"
 	"strings"
 	"xel/engine"
+	"xel/globals"
 
+	"github.com/dev-kas/VirtLang-Go/environment"
+	"github.com/dev-kas/VirtLang-Go/shared"
+	"github.com/dev-kas/VirtLang-Go/values"
 	"github.com/urfave/cli/v2"
 )
 
@@ -33,11 +37,17 @@ func RunCommand() *cli.Command {
 			}
 
 			// Get remaining arguments
-			args := []string{}
+			rawArgs := []string{}
 			if c.NArg() > 1 {
 				for i := 1; i < c.NArg(); i++ {
-					args = append(args, c.Args().Get(i))
+					rawArgs = append(rawArgs, c.Args().Get(i))
 				}
+			}
+
+			// Convert arguments to []shared.RuntimeValue
+			args := make([]shared.RuntimeValue, len(rawArgs))
+			for i, arg := range rawArgs {
+				args[i] = values.MK_STRING(arg)
 			}
 
 			// Read file content
@@ -47,27 +57,22 @@ func RunCommand() *cli.Command {
 			}
 
 			// Pass content to the engine
-			result, err := engine.Eval(string(content))
+			_, err = engine.Eval(string(content), func(env *environment.Environment) {
+				globals.Globalize(env)
+
+				RV_proc_args := values.MK_ARRAY(args)
+				RV_proc := map[string]*shared.RuntimeValue{
+					"args": &RV_proc_args,
+				}
+				convertedProc := make(map[string]shared.RuntimeValue)
+				for key, val := range RV_proc {
+					convertedProc[key] = *val
+				}
+				env.DeclareVar("proc", values.MK_OBJECT(convertedProc), false)
+			})
+
 			if err != nil {
 				return fmt.Errorf("execution failed: %v", err)
-			}
-
-			// Print the result
-			if result != nil {
-				// Check if the result has a Value field (assuming RuntimeValue has a Value field)
-				if v, ok := result.Value.(int); ok {
-					fmt.Printf("Result: %d\n", v)
-				} else if v, ok := result.Value.(float64); ok {
-					fmt.Printf("Result: %f\n", v)
-				} else if v, ok := result.Value.(string); ok {
-					fmt.Printf("Result: %s\n", v)
-				} else if v, ok := result.Value.(bool); ok {
-					fmt.Printf("Result: %t\n", v)
-				} else {
-					fmt.Printf("Result: %v\n", result)
-				}
-			} else {
-				fmt.Println("Execution completed successfully with no return value")
 			}
 
 			return nil

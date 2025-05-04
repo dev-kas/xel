@@ -1,6 +1,6 @@
 module xel
 
-go 1.19
+go 1.23.2
 
 require (
 	github.com/dev-kas/VirtLang-Go v1.0.0
