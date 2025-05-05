@@ -6,10 +6,13 @@ import (
 	"strings"
 	"xel/engine"
 	"xel/globals"
+	"xel/helpers"
 
 	"github.com/dev-kas/VirtLang-Go/environment"
+	"github.com/dev-kas/VirtLang-Go/errors"
 	"github.com/dev-kas/VirtLang-Go/shared"
 	"github.com/dev-kas/VirtLang-Go/values"
+	"github.com/fatih/color"
 	"github.com/urfave/cli/v2"
 )
 
@@ -47,7 +50,7 @@ func RunCommand() *cli.Command {
 			// Convert arguments to []shared.RuntimeValue
 			args := make([]shared.RuntimeValue, len(rawArgs))
 			for i, arg := range rawArgs {
-				args[i] = values.MK_STRING(arg)
+				args[i] = values.MK_STRING(fmt.Sprintf("\"%s\"", arg))
 			}
 
 			// Read file content
@@ -72,7 +75,16 @@ func RunCommand() *cli.Command {
 			})
 
 			if err != nil {
-				return fmt.Errorf("execution failed: %v", err)
+				if ok := err.(*errors.SyntaxError); ok != nil {
+					start := ok.Start + 1
+					end := start + ok.Difference
+
+					startLine, startCol := helpers.PosToLineCol(content, start)
+					endLine, endCol := helpers.PosToLineCol(content, end)
+
+					color.Red("From %s:%d:%d to %s:%d:%d\n", filename, startLine, startCol, filename, endLine, endCol)
+				}
+				return err
 			}
 
 			return nil

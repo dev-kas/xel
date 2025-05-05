@@ -8,3 +8,17 @@ let result = add(10, 20)
 
 print("10 + 20 =", result)
 print("and it has a type of", typeof(result))
+print(NaN, true, false, nil, inf)
+print(22 / 7)
+
+print("is float supported?", 1/2 != 0)
+print(1/2, "<== 1 / 2")
+// print ("0.1 + 0.2 =", 0.1 + 0.2)
+
+let myProc = {
+  args: [
+    "Hello", "World"
+  ]
+}
+
+print(myProc)

@@ -2,6 +2,7 @@ package globals
 
 import (
 	"fmt"
+	"xel/helpers"
 
 	"github.com/dev-kas/VirtLang-Go/environment"
 	"github.com/dev-kas/VirtLang-Go/errors"
@@ -12,14 +13,7 @@ import (
 var Print = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environment.Environment) (*shared.RuntimeValue, *errors.RuntimeError) {
 	out := ""
 	for i, arg := range args {
-		switch arg.Type {
-		case shared.String:
-			out += arg.Value.(string)[1 : len(arg.Value.(string))-1]
-		case shared.Number:
-			out += fmt.Sprintf("%d", arg.Value)
-		default:
-			out += fmt.Sprintf("%v", arg.Value)
-		}
+		out += helpers.Stringify(arg, false)
 
 		if len(args)-1 != i {
 			out += " "
