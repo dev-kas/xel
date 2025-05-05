@@ -1,4 +1,4 @@
-# Xel
+# Xel (/z·eh·l/)
 
 Xel is a runtime for VirtLang, a lightweight programming language designed for simplicity and extensibility. Xel provides an environment for executing VirtLang code.
 

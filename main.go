@@ -11,11 +11,13 @@ import (
 	"time"
 
 	"xel/cmds"
-	"xel/engine"
 	"xel/globals"
 	"xel/helpers"
 
 	"github.com/chzyer/readline"
+	"github.com/dev-kas/VirtLang-Go/environment"
+	"github.com/dev-kas/VirtLang-Go/evaluator"
+	"github.com/dev-kas/VirtLang-Go/parser"
 	"github.com/fatih/color"
 	"github.com/urfave/cli/v2"
 )
@@ -48,6 +50,8 @@ func main() {
 			sigChan := make(chan os.Signal, 1)
 			signal.Notify(sigChan, syscall.SIGINT)
 			defer rl.Close()
+			env := environment.NewEnvironment(nil)
+			globals.Globalize(&env)
 			for {
 				inputChan := make(chan string, 1)
 				errChan := make(chan error, 1)
@@ -86,9 +90,16 @@ func main() {
 						continue
 					}
 
-					output, err := engine.Eval(line, globals.Globalize)
+					p := parser.New()
+					program, err := p.ProduceAST(line)
 					if err != nil {
 						color.Red("Error: %s", err.Error())
+						continue
+					}
+
+					output, oerr := evaluator.Evaluate(program, &env)
+					if oerr != nil {
+						color.Red("Error: %s", oerr.Error())
 						continue
 					}
 					if output != nil {
