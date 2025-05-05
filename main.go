@@ -162,7 +162,7 @@ func checkNewVersion() string {
 		return Version
 	}
 	tagName := release.TagName
-	if tagName[0] == 'v' {
+	if len(tagName) > 1 && tagName[0] == 'v' {
 		tagName = tagName[1:]
 	} else {
 		return Version
