@@ -39,7 +39,7 @@ jobs:
       - name: Build for all platforms
         run: |
           # Build for all platforms with version from tag
-          make build VERSION=$VERSION
+          make build VERSION=$VERSION ENGINE_VERSION=$(go list -m github.com/yourname/virtlang | awk '{print $2}')
           
           # Create directory for release assets
           mkdir -p release-assets

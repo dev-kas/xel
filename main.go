@@ -25,15 +25,20 @@ import (
 // Version is the current version of Xel
 // This will be overridden during build by using ldflags
 var Version = "dev"
+var EngineVersion = "unknown"
 
 func main() {
+	cli.VersionPrinter = func(c *cli.Context) {
+		fmt.Printf("VirtLang Engine version: %s - Xel version: %s \n", color.CyanString(EngineVersion), color.CyanString(c.App.Version))
+	}
+
 	app := &cli.App{
 		Name:     "xel",
 		Usage:    "A runtime for VirtLang",
 		Version:  Version,
 		Commands: cmds.GetCommands(),
 		Action: func(c *cli.Context) error {
-			color.Cyan("Welcome to Xel v%s REPL!", Version)
+			color.Cyan("Welcome to Xel v%s REPL (VirtLang v%s)!", Version, EngineVersion)
 			color.RGB(105, 105, 105).Println("Type '!exit' to exit the REPL.")
 
 			rl, err := readline.NewEx(&readline.Config{
