@@ -6,8 +6,6 @@ import (
 	"github.com/dev-kas/VirtLang-Go/shared"
 )
 
-
-
 func Stringify(value shared.RuntimeValue, internal bool) string {
 	output := ""
 	switch value.Type {

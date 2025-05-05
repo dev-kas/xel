@@ -4,7 +4,7 @@ func PosToLineCol(input []byte, pos int) (line int, col int) {
 	if pos > len(input) {
 		pos = len(input)
 	}
-	
+
 	line = 1
 	lastNewline := -1
 

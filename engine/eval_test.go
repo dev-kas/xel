@@ -30,33 +30,33 @@ func TestEval(t *testing.T) {
 			wantErr:  false,
 		},
 		{
-			name:     "syntax error",
-			input:    "10 + * 20",
-			wantErr:  true,
+			name:    "syntax error",
+			input:   "10 + * 20",
+			wantErr: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result, err := Eval(tt.input, nil)
-			
+
 			// Check error expectation
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Eval() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			
+
 			// If we expect an error, we don't need to check the result
 			if tt.wantErr {
 				return
 			}
-			
+
 			// Check result value
 			if result == nil {
 				t.Errorf("Eval() result is nil, expected %v", tt.expected)
 				return
 			}
-			
+
 			// Check the type and value based on expected type
 			switch expected := tt.expected.(type) {
 			case int:
@@ -73,7 +73,7 @@ func TestEval(t *testing.T) {
 					t.Errorf("Eval() result type = %T, expected int", result.Value)
 					return
 				}
-				
+
 				if val != expected {
 					t.Errorf("Eval() result = %v, expected %v", val, expected)
 				}

@@ -106,13 +106,13 @@ func main() {
 			go func() {
 				versionFile := filepath.Join(homedir, ".xel", "version-latest")
 				needCheck := true
-		
+
 				if info, err := os.Stat(versionFile); err == nil {
 					if time.Since(info.ModTime()) < 24*time.Hour {
 						needCheck = false
 					}
 				}
-		
+
 				if needCheck {
 					latestVersion := checkNewVersion()
 					if latestVersion != Version {
@@ -126,7 +126,7 @@ func main() {
 					}
 				}
 			}()
-		}		
+		}
 	}
 
 	err = app.Run(os.Args)
