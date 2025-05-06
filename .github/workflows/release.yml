@@ -56,9 +56,4 @@ jobs:
           prerelease: false
           generate_release_notes: true
           files: |
-            release-assets/xel-v${{ steps.get_version.outputs.version }}-darwin-arm64
-            release-assets/xel-v${{ steps.get_version.outputs.version }}-linux-amd64
-            release-assets/xel-v${{ steps.get_version.outputs.version }}-windows-amd64.exe
-            release-assets/xel-darwin-arm64
-            release-assets/xel-linux-amd64
-            release-assets/xel-windows-amd64.exe
+            release-assets/xel-*
