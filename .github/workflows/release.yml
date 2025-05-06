@@ -45,14 +45,7 @@ jobs:
           mkdir -p release-assets
           
           # Copy and rename binaries to include version
-          cp bin/xel-darwin-arm64 release-assets/xel-v${VERSION}-darwin-arm64
-          cp bin/xel-linux-amd64 release-assets/xel-v${VERSION}-linux-amd64
-          cp bin/xel-windows-amd64.exe release-assets/xel-v${VERSION}-windows-amd64.exe
-          
-          # Also copy with standard names for the install scripts
-          cp bin/xel-darwin-arm64 release-assets/xel-darwin-arm64
-          cp bin/xel-linux-amd64 release-assets/xel-linux-amd64
-          cp bin/xel-windows-amd64.exe release-assets/xel-windows-amd64.exe
+          cp bin/xel-* release-assets/
 
       - name: Create Release
         id: create_release
