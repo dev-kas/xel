@@ -3,7 +3,7 @@ package helpers
 import (
 	"fmt"
 
-	"github.com/dev-kas/VirtLang-Go/shared"
+	"github.com/dev-kas/virtlang-go/v2/shared"
 )
 
 func Stringify(value shared.RuntimeValue, internal bool) string {
@@ -16,7 +16,7 @@ func Stringify(value shared.RuntimeValue, internal bool) string {
 			output += value.Value.(string)[1 : len(value.Value.(string))-1]
 		}
 	case shared.Number:
-		output += fmt.Sprintf("%d", value.Value.(int))
+		output += fmt.Sprintf("%g", value.Value.(float64))
 	case shared.Boolean:
 		if value.Value.(bool) {
 			output += "true"

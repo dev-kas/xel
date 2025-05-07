@@ -15,9 +15,9 @@ import (
 	"xel/helpers"
 
 	"github.com/chzyer/readline"
-	"github.com/dev-kas/VirtLang-Go/environment"
-	"github.com/dev-kas/VirtLang-Go/evaluator"
-	"github.com/dev-kas/VirtLang-Go/parser"
+	"github.com/dev-kas/virtlang-go/v2/environment"
+	"github.com/dev-kas/virtlang-go/v2/evaluator"
+	"github.com/dev-kas/virtlang-go/v2/parser"
 	"github.com/fatih/color"
 	"github.com/urfave/cli/v2"
 )

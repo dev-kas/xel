@@ -8,10 +8,10 @@ import (
 	"xel/globals"
 	"xel/helpers"
 
-	"github.com/dev-kas/VirtLang-Go/environment"
-	"github.com/dev-kas/VirtLang-Go/errors"
-	"github.com/dev-kas/VirtLang-Go/shared"
-	"github.com/dev-kas/VirtLang-Go/values"
+	"github.com/dev-kas/virtlang-go/v2/environment"
+	"github.com/dev-kas/virtlang-go/v2/errors"
+	"github.com/dev-kas/virtlang-go/v2/shared"
+	"github.com/dev-kas/virtlang-go/v2/values"
 	"github.com/fatih/color"
 	"github.com/urfave/cli/v2"
 )
