@@ -8,6 +8,8 @@ github.com/cpuguy83/go-md2man/v2 v2.0.5 h1:ZtcqGrnekaHpVLArFSe4HK5DoKx1T0rq2DwVB
 github.com/cpuguy83/go-md2man/v2 v2.0.5/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/dev-kas/virtlang-go/v2 v2.0.3 h1:0GJgr4MWt4dhZJTM04Ry6xZvaUHxBIE35rUA2ty9osY=
 github.com/dev-kas/virtlang-go/v2 v2.0.3/go.mod h1:s4MnyphuLnvh4v6s33aGy8YZ2Hh8piwnUcbpjC51mjg=
+github.com/dev-kas/virtlang-go/v2 v2.1.0 h1:bpEfEoe9EHwSzUP54OHDc3gegnd2JoEhhu2OkHxxeZE=
+github.com/dev-kas/virtlang-go/v2 v2.1.0/go.mod h1:s4MnyphuLnvh4v6s33aGy8YZ2Hh8piwnUcbpjC51mjg=
 github.com/fatih/color v1.18.0 h1:S8gINlzdQ840/4pfAwic/ZE0djQEH3wM94VfqLTZcOM=
 github.com/fatih/color v1.18.0/go.mod h1:4FelSpRwEGDpQ12mAdzqdOukCy4u8WUtOY6lkT/6HfU=
 github.com/mattn/go-colorable v0.1.13 h1:fFA4WZxdEF4tXPZVKMLwD8oUnCTTo08duU7wxecdEvA=

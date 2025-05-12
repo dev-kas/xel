@@ -1,0 +1,6 @@
+print("Main script starting...")
+let main_a_exports = import("./cycleA")
+print("Main script: Finished importing cycleA.")
+
+// This code should be unreachable because of the import cycle error
+print(main_a_exports.messageA)

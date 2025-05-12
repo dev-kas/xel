@@ -1,0 +1,15 @@
+class Post {
+  public id
+  public content
+
+  public constructor(c, i) {
+    id = i
+    content = c
+  }
+
+  public edit(c) {
+    content = c
+  }
+}
+
+return Post

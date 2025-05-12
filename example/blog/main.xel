@@ -1,0 +1,27 @@
+let users = 0
+let posts = 0
+
+const Post = import("./post")
+const User = import("./user")
+
+let user = User("kas", "kas@example.com", "s3cr3t", users)
+users = users + 1
+
+let post = user.createPost("Hello World", posts)
+posts = posts + 1
+
+post.edit("Hello World 2")
+print("Post: ", post)
+print("First post: ", user.userPosts[0].content)
+
+print("Users: ", users)
+print("Posts: ", posts)
+
+print("User: ", user)
+print("User profile: ", user.getProfile())
+
+// also, the password is private, so its nil from outside pov
+print("User password: ", user.password)
+
+// but from inside the class, we can access it
+print("User password from inside: ", user.getPassword())

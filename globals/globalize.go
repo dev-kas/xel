@@ -1,14 +1,15 @@
 package globals
 
 import (
+	"fmt"
 	"math"
+	"os"
 
 	"github.com/dev-kas/virtlang-go/v2/environment"
 	"github.com/dev-kas/virtlang-go/v2/values"
 )
 
 func Globalize(env *environment.Environment) {
-
 	env.DeclareVar("true", values.MK_BOOL(true), true)
 	env.DeclareVar("false", values.MK_BOOL(false), true)
 	env.DeclareVar("nil", values.MK_NIL(), true)
@@ -18,4 +19,9 @@ func Globalize(env *environment.Environment) {
 	env.DeclareVar("print", Print, false)
 	env.DeclareVar("len", Len, false)
 	env.DeclareVar("typeof", Typeof, false)
+	env.DeclareVar("import", Import, false)
+
+	pwd, _ := os.Getwd()
+	env.DeclareVar("__dirname__", values.MK_STRING(fmt.Sprintf("\"%s\"", pwd)), true)
+	env.DeclareVar("__filename__", values.MK_STRING("\"\""), true)
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/dev-kas/virtlang-go/v2/shared"
+	"github.com/dev-kas/virtlang-go/v2/values"
 )
 
 func Stringify(value shared.RuntimeValue, internal bool) string {
@@ -44,8 +45,20 @@ func Stringify(value shared.RuntimeValue, internal bool) string {
 		output += "<function>"
 	case shared.NativeFN:
 		output += "<native function>"
+	case shared.Class:
+		output += "<class>"
+	case shared.ClassInstance:
+		keyValuePair := map[string]*shared.RuntimeValue{}
+		ciVal := value.Value.(values.ClassInstanceValue)
+		for key, val := range ciVal.Data.Variables {
+			if ciVal.Publics[key] {
+				keyValuePair[key] = &val
+			}
+		}
+		output += Stringify(values.MK_OBJECT(keyValuePair), true)
+
 	default:
-		output += "Unknown - " + value.Value.(string)
+		output += fmt.Sprintf("Unknown - %+v", value.Value)
 	}
 	return output
 }

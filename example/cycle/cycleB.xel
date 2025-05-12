@@ -1,0 +1,16 @@
+print("Executing cycleB.xel")
+
+// Try to import cycleA.xel (this creates the circular dependency)
+let a_exports = import("./cycleA")
+
+print("cycleB.xel: Imported cycleA, got:", typeof(a_exports))
+
+fn greetFromB() {
+  return "Hello from module B"
+}
+
+// Export something from cycleB.xel
+let exports = {
+  messageB: "Module B is loaded",
+  greetB: greetFromB
+}

@@ -4,7 +4,7 @@ go 1.23.2
 
 require (
 	github.com/chzyer/readline v1.5.1
-	github.com/dev-kas/virtlang-go/v2 v2.0.3
+	github.com/dev-kas/virtlang-go/v2 v2.1.0
 	github.com/fatih/color v1.18.0
 	github.com/urfave/cli/v2 v2.27.6
 )

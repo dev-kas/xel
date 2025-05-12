@@ -94,6 +94,8 @@ xel run script.xel arg1 arg2 arg3
 
 ### Example VirtLang Script
 
+Please check the [example](example) directory for more examples.
+
 Create a file named `example.xel` with the following content:
 
 ```

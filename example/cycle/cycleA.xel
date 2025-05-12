@@ -1,0 +1,16 @@
+print("Executing cycleA.xel")
+
+// Try to import cycleB.xel
+let b_exports = import("./cycleB")
+
+print("cycleA.xel: Imported cycleB, got:", typeof(b_exports))
+
+fn greetFromA() {
+  return "Hello from module A"
+}
+
+// Export something from cycleA.xel
+let exports = {
+  messageA: "Module A is loaded",
+  greetA: greetFromA
+}

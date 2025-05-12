@@ -13,6 +13,9 @@ import (
 	"xel/cmds"
 	"xel/globals"
 	"xel/helpers"
+	"xel/shared"
+
+	_ "xel/modules/math"
 
 	"github.com/chzyer/readline"
 	"github.com/dev-kas/virtlang-go/v2/environment"
@@ -28,6 +31,7 @@ var Version = "dev"
 var EngineVersion = "unknown"
 
 func main() {
+	globals.Globalize(&shared.XelRootEnv)
 	cli.VersionPrinter = func(c *cli.Context) {
 		fmt.Printf("VirtLang Engine version: %s - Xel version: %s \n", color.CyanString(EngineVersion), color.CyanString(c.App.Version))
 	}
@@ -55,8 +59,7 @@ func main() {
 			sigChan := make(chan os.Signal, 1)
 			signal.Notify(sigChan, syscall.SIGINT)
 			defer rl.Close()
-			env := environment.NewEnvironment(nil)
-			globals.Globalize(&env)
+			env := environment.NewEnvironment(&shared.XelRootEnv)
 			for {
 				inputChan := make(chan string, 1)
 				errChan := make(chan error, 1)

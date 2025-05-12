@@ -1,0 +1,84 @@
+const math = import("xel:math")
+
+// abs
+print(math.abs(0 - 18))
+print(math.abs(18))
+print(math.abs(0))
+
+// round
+print(math.round(1.2))
+print(math.round(1.8))
+print(math.round(1.5))
+
+// floor
+print(math.floor(1.2))
+print(math.floor(1.8))
+print(math.floor(1.5))
+
+// ceil
+print(math.ceil(1.2))
+print(math.ceil(1.8))
+print(math.ceil(1.5))
+
+// trunc
+print(math.trunc(3.7))
+print(math.trunc(0 - 3.7))
+print(math.trunc(0.0))
+
+// sign
+print(math.sign(0 - 10))
+print(math.sign(0))
+print(math.sign(25))
+
+// sin / cos / tan
+print(math.sin(0))
+print(math.sin(math.PI / 2))
+print(math.cos(0))
+print(math.cos(math.PI))
+print(math.tan(0))
+print(math.tan(math.PI / 4))
+
+// asin / acos / atan / atan2
+print(math.asin(1))
+print(math.acos(1))
+print(math.atan(1))
+print(math.atan2(1, 1))
+
+// exp / log / log10 / log2
+print(math.exp(1))
+print(math.log(math.E))
+print(math.log10(100))
+print(math.log2(8))
+
+// pow / sqrt / cbrt
+print(math.pow(2, 10))
+print(math.sqrt(16))
+print(math.cbrt(27))
+
+// clamp
+print(math.clamp(5, 0, 10))
+print(math.clamp(0 - 5, 0, 10))
+print(math.clamp(15, 0, 10))
+
+// min / max
+print(math.min(1, 3, 2))
+print(math.max(1, 3, 2))
+
+// deg <-> rad
+print(math.degToRad(180))
+print(math.radToDeg(math.PI))
+
+// constants
+print(math.PI)
+print(math.E)
+
+// random
+print(math.random())
+print(math.random(3))
+print(math.random(2, 3))
+print(math.random(nil, 3))
+
+// stats
+print(math.sum([1, 2, 3]))
+print(math.mean([1, 2, 3]))
+print(math.median([3, 1, 2]))

@@ -1,0 +1,32 @@
+const Post = import("./post")
+
+class User {
+  public username
+  public email
+  public id
+  public userPosts = []
+  private password
+
+  public constructor(u, e, p, i) {
+    username = u
+    email = e
+    password = p
+    id = i
+  }
+
+  public createPost(c, i) {
+    let post = Post(c, i)
+    userPosts[post.id] = post
+    return post
+  }
+
+  public getProfile() {
+    return username + " <" + email + ">"
+  }
+
+  public getPassword() {
+    return password
+  }
+}
+
+return User

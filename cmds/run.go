@@ -3,13 +3,15 @@ package cmds
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
-	"xel/engine"
-	"xel/globals"
 	"xel/helpers"
+	xShared "xel/shared"
 
 	"github.com/dev-kas/virtlang-go/v2/environment"
 	"github.com/dev-kas/virtlang-go/v2/errors"
+	"github.com/dev-kas/virtlang-go/v2/evaluator"
+	"github.com/dev-kas/virtlang-go/v2/parser"
 	"github.com/dev-kas/virtlang-go/v2/shared"
 	"github.com/dev-kas/virtlang-go/v2/values"
 	"github.com/fatih/color"
@@ -39,6 +41,12 @@ func RunCommand() *cli.Command {
 				return fmt.Errorf("file %s does not exist", filename)
 			}
 
+			// Convert filename to absolute path
+			filename, err = filepath.Abs(filename)
+			if err != nil {
+				return err
+			}
+
 			// Get remaining arguments
 			rawArgs := []string{}
 			if c.NArg() > 1 {
@@ -59,32 +67,40 @@ func RunCommand() *cli.Command {
 				return fmt.Errorf("failed to read file %s: %v", filename, err)
 			}
 
-			// Pass content to the engine
-			_, err = engine.Eval(string(content), func(env *environment.Environment) {
-				globals.Globalize(env)
-
-				RV_proc_args := values.MK_ARRAY(args)
-				RV_proc := map[string]*shared.RuntimeValue{
-					"args": &RV_proc_args,
-				}
-				convertedProc := make(map[string]shared.RuntimeValue)
-				for key, val := range RV_proc {
-					convertedProc[key] = *val
-				}
-				env.DeclareVar("proc", values.MK_OBJECT(convertedProc), false)
-			})
-
-			if err != nil {
-				if ok := err.(*errors.SyntaxError); ok != nil {
-					start := ok.Start + 1
-					end := start + ok.Difference
+			program, parseErr := parser.New().ProduceAST(string(content))
+			if parseErr != nil {
+				if err, ok := parseErr.(*errors.SyntaxError); ok {
+					start := err.Start + 1
+					end := start + err.Difference
 
 					startLine, startCol := helpers.PosToLineCol(content, start)
 					endLine, endCol := helpers.PosToLineCol(content, end)
 
 					color.Red("From %s:%d:%d to %s:%d:%d\n", filename, startLine, startCol, filename, endLine, endCol)
 				}
-				return err
+				return parseErr
+			}
+
+			rootEnv := &xShared.XelRootEnv
+
+			RV_proc_args := values.MK_ARRAY(args)
+			RV_proc := map[string]*shared.RuntimeValue{
+				"args": &RV_proc_args,
+			}
+			convertedProc := make(map[string]*shared.RuntimeValue)
+			for key, val := range RV_proc {
+				convertedProc[key] = val
+			}
+			rootEnv.DeclareVar("proc", values.MK_OBJECT(convertedProc), false)
+
+			env := environment.NewEnvironment(rootEnv)
+			env.DeclareVar("__filename__", values.MK_STRING(fmt.Sprintf("\"%s\"", filename)), true)
+			env.DeclareVar("__dirname__", values.MK_STRING(fmt.Sprintf("\"%s\"", filepath.Dir(filename))), true)
+
+			_, evalErr := evaluator.Evaluate(program, &env)
+
+			if evalErr != nil {
+				return evalErr
 			}
 
 			return nil
