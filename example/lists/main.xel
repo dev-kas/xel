@@ -1,0 +1,147 @@
+const array = import("xel:array")
+const math = import("xel:math")
+
+// push
+let arr = []
+arr = array.push(arr, 1, 2, 3)
+print(arr)
+
+// pop
+let popped = array.pop(arr)
+arr = popped
+print(arr)
+
+// shift
+let shifted = array.shift(arr)
+arr = shifted
+print(arr)
+
+// unshift
+arr = array.unshift(arr, 6, 8, 3, 7)
+print(arr)
+
+// slice
+let sliced = array.slice(arr, 1, 4)
+print(sliced)
+arr = sliced
+let slicedNegative = array.slice(arr, 0 - 2)
+print(slicedNegative)
+arr = slicedNegative
+
+// splice
+let spliced = array.splice(arr, 1, 1, 4, 5, 7)
+arr = spliced
+print(arr)
+
+// fill
+arr = array.fill(arr, 9)
+print(arr)
+arr = array.fill(arr, 7, 1, 3)
+print(arr)
+
+// reverse
+let reversed = array.reverse(arr)
+arr = reversed
+print(arr)
+
+// sort
+let sorted = array.sort(arr)
+arr = sorted
+print(arr)
+arr = array.sort(arr, (fn (a, b) { return a - b }))
+print(arr)
+arr = array.push(arr, 2,6,2,1,5,6,2,9,5,1)
+arr = array.sort(arr, (fn (a, b) {
+    const randomFactor = math.random(0 - 5, 5)
+    const comparison = (a - b) + randomFactor
+    if (math.random() < 0.2) {
+        return comparison * (0-1)
+    }
+
+    if (math.random() < 0.3) {
+        if (a > b) {
+            return comparison * 1.2
+        } else {
+            return comparison * 0.8
+        }
+    }
+
+    return comparison
+})) 
+print(arr)
+
+// map
+let mapped = array.map(arr, (fn (el) { return el * 2 }))
+arr = mapped
+print(arr)
+
+// filter
+let filtered = array.filter(arr, (fn (el) { return el < 9}))
+arr = filtered
+print(arr)
+
+// forEach
+array.forEach(arr, (fn (el, i, arr) { print(el, i, arr) }))
+
+// reduce
+let sum = array.reduce(arr, (fn (acc, el, i, arr) { return acc + el }), 0)
+print(sum)
+
+// reduceRight
+let product = array.reduceRight(arr, (fn (acc, el) { return acc * el }), 1)
+print(product)
+
+// includes
+print(array.includes(arr, 2))
+print(array.includes(arr, 5))
+
+// indexOf
+print(array.indexOf(arr, 2))
+print(array.indexOf(arr, 5))
+
+// lastIndexOf
+print(array.lastIndexOf(arr, 2))
+print(array.lastIndexOf(arr, 5))
+
+// Randomize the array because it has kinda less things now
+arr = array.sort([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], (fn (a, b) { return math.random() - math.random() }))
+print(arr)
+
+
+// find
+let found = array.find(arr, (fn (el) { return el == 9 }))
+print(found)
+
+// findIndex
+let foundIndex = array.findIndex(arr, (fn (el) { return el == 9 }))
+print(foundIndex)
+
+// every
+let allMatch = array.every(arr, (fn (el, i) { return el == i }))
+print(allMatch)
+
+// some
+let someMatch = array.some(arr, (fn (el) { return el == 7 }))
+print(someMatch)
+
+// join
+let joined = array.join(arr)
+print(joined)
+print(array.join(["apple", "banana"], " and "))
+
+// concat
+let concatenated = array.concat(arr, [10, 11])
+arr = concatenated
+print(arr)
+
+// from
+let fromArray = array.from("hello")
+print(fromArray)
+
+// of
+let ofArray = array.of(1, 2, 3)
+print(ofArray)
+
+// create
+let createdArray = array.create(5, 0)
+print(createdArray)

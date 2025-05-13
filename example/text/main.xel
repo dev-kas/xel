@@ -1,0 +1,75 @@
+const strings = import("xel:strings")
+
+// charAt / charCodeAt
+let str = "VirtLang"
+print(strings.charAt(str, 0))         // V
+print(strings.charAt(str, 100))       // nil
+print(strings.charCodeAt(str, 1))     // 105 (i)
+
+// includes / startsWith / endsWith
+print(strings.includes(str, "Lang"))         // true
+print(strings.includes(str, "lang"))         // false
+print(strings.includes(str, "Lang", 4))      // true
+print(strings.startsWith(str, "Virt"))       // true
+print(strings.startsWith(str, "Lang", 4))    // true
+print(strings.endsWith(str, "Lang"))         // true
+print(strings.endsWith(str, "Lang", 8))      // true
+print(strings.endsWith(str, "Lang", 6))      // false
+
+// indexOf / lastIndexOf
+let sentence = "the quick brown fox jumps over the lazy dog"
+print(strings.indexOf(sentence, "the"))              // 0
+print(strings.indexOf(sentence, "the", 1))           // 31
+print(strings.indexOf(sentence, "notfound"))         // -1
+print(strings.lastIndexOf(sentence, "the"))          // 31
+print(strings.lastIndexOf(sentence, "the", 30))      // 0
+
+// concat
+print(strings.concat("Hello, ", "Xel", "!"))         // Hello, Xel!
+
+// slice
+print(strings.slice(str, 0, 4))                      // Virt
+print(strings.slice(str, 0 - 4))                     // Lang
+
+// substring
+print(strings.substring(str, 4, 0))                  // Virt (swapped)
+print(strings.substring(str, 4))                     // Lang
+
+// substr
+print(strings.substr(str, 0, 4))                     // Virt
+print(strings.substr(str, 4))                        // Lang
+
+// lower / upper
+print(strings.lower(str))                            // virtlang
+print(strings.upper(str))                            // VIRTLANG
+
+// trim / trimStart / trimEnd
+let padded = "   hello world   "
+print(strings.trim(padded))                          // "hello world"
+print(strings.trimStart(padded))                     // "hello world   "
+print(strings.trimEnd(padded))                       // "   hello world"
+
+// padStart / padEnd
+print(strings.padStart("7", 3))                      // "  7"
+print(strings.padStart("7", 3, "0"))                 // "007"
+print(strings.padEnd("7", 3, "."))                   // "7.."
+
+// repeat
+print(strings.repeat("xo", 3))                       // xoxoxo
+
+// replace / replaceAll
+let replaceTest = "foo bar foo"
+print(strings.replace(replaceTest, "foo", "baz"))    // baz bar foo
+print(strings.replaceAll(replaceTest, "foo", "baz")) // baz bar baz
+
+// split / toArray
+let csv = "red,green,blue"
+print(strings.split(csv, ","))                       // ["red", "green", "blue"]
+print(strings.split(csv, ",", 2))                    // ["red", "green,blue"]
+print(strings.split("abc", ""))                      // ["a", "b", "c"]
+print(strings.split("split"))                        // ["s", "p", "l", "i", "t"]
+print(strings.toArray("Virt"))                       // ["V", "i", "r", "t"]
+
+// format
+print(strings.format("Hello, %v! You are %v years old.", "Jedi", 19)) // Hello, Jedi! You are 19 years old.
+print(strings.format("Red: %v", 255))                               // Red: 255

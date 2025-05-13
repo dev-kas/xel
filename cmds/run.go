@@ -82,16 +82,19 @@ func RunCommand() *cli.Command {
 			}
 
 			rootEnv := &xShared.XelRootEnv
+			RV_proc := map[string]*shared.RuntimeValue{}
+
+			if _, ok := rootEnv.Resolve("proc"); ok != nil {
+				rootEnv.DeclareVar("proc", values.MK_OBJECT(RV_proc), false)
+			} else {
+				val, _ := rootEnv.LookupVar("proc")
+				RV_proc = val.Value.(map[string]*shared.RuntimeValue)
+			}
 
 			RV_proc_args := values.MK_ARRAY(args)
-			RV_proc := map[string]*shared.RuntimeValue{
-				"args": &RV_proc_args,
-			}
-			convertedProc := make(map[string]*shared.RuntimeValue)
-			for key, val := range RV_proc {
-				convertedProc[key] = val
-			}
-			rootEnv.DeclareVar("proc", values.MK_OBJECT(convertedProc), false)
+			RV_proc["args"] = &RV_proc_args
+
+			rootEnv.AssignVar("proc", values.MK_OBJECT(RV_proc))
 
 			env := environment.NewEnvironment(rootEnv)
 			env.DeclareVar("__filename__", values.MK_STRING(fmt.Sprintf("\"%s\"", filename)), true)

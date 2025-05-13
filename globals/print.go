@@ -20,5 +20,6 @@ var Print = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environmen
 		}
 	}
 	fmt.Println(out)
-	return nil, nil
+	result := values.MK_NIL()
+	return &result, nil
 })

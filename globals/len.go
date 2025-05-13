@@ -13,6 +13,20 @@ var Len = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environment.
 			Message: "len() takes exactly one argument",
 		}
 	}
-	result := values.MK_NUMBER(float64(len(args[0].Value.([]any))))
+
+	if args[0].Type != shared.Array && args[0].Type != shared.String {
+		return nil, &errors.RuntimeError{
+			Message: "len() takes an array or string as an argument",
+		}
+	}
+
+	result := values.MK_NIL()
+
+	if args[0].Type == shared.String {
+		result = values.MK_NUMBER(float64(len(args[0].Value.(string))) - 2)
+	} else {
+		result = values.MK_NUMBER(float64(len(args[0].Value.([]shared.RuntimeValue))))
+	}
+
 	return &result, nil
 })

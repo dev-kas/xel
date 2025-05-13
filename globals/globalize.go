@@ -24,4 +24,6 @@ func Globalize(env *environment.Environment) {
 	pwd, _ := os.Getwd()
 	env.DeclareVar("__dirname__", values.MK_STRING(fmt.Sprintf("\"%s\"", pwd)), true)
 	env.DeclareVar("__filename__", values.MK_STRING("\"\""), true)
+
+	env.DeclareVar("proc", Proc(), false)
 }

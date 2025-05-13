@@ -4,6 +4,7 @@ import (
 	"os"
 	"testing"
 	"xel/cmds"
+	"xel/shared"
 
 	"github.com/urfave/cli/v2"
 )
@@ -13,7 +14,7 @@ func TestMainApp(t *testing.T) {
 	app := &cli.App{
 		Name:     "xel",
 		Usage:    "A runtime for VirtLang",
-		Version:  Version,
+		Version:  shared.RuntimeVersion,
 		Commands: cmds.GetCommands(),
 	}
 

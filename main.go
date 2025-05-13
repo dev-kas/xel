@@ -16,6 +16,8 @@ import (
 	"xel/shared"
 
 	_ "xel/modules/math"
+	_ "xel/modules/array"
+	_ "xel/modules/strings"
 
 	"github.com/chzyer/readline"
 	"github.com/dev-kas/virtlang-go/v2/environment"
@@ -25,24 +27,19 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-// Version is the current version of Xel
-// This will be overridden during build by using ldflags
-var Version = "dev"
-var EngineVersion = "unknown"
-
 func main() {
 	globals.Globalize(&shared.XelRootEnv)
 	cli.VersionPrinter = func(c *cli.Context) {
-		fmt.Printf("VirtLang Engine version: %s - Xel version: %s \n", color.CyanString(EngineVersion), color.CyanString(c.App.Version))
+		fmt.Printf("VirtLang Engine version: %s - Xel version: %s \n", color.CyanString(shared.EngineVersion), color.CyanString(c.App.Version))
 	}
 
 	app := &cli.App{
 		Name:     "xel",
 		Usage:    "A runtime for VirtLang",
-		Version:  Version,
+		Version:  shared.RuntimeVersion,
 		Commands: cmds.GetCommands(),
 		Action: func(c *cli.Context) error {
-			color.Cyan("Welcome to Xel v%s REPL (VirtLang v%s)!", Version, EngineVersion)
+			color.Cyan("Welcome to Xel v%s REPL (VirtLang v%s)!", shared.RuntimeVersion, shared.EngineVersion)
 			color.RGB(105, 105, 105).Println("Type '!exit' to exit the REPL.")
 
 			rl, err := readline.NewEx(&readline.Config{
@@ -121,7 +118,7 @@ func main() {
 	homedir, err := os.UserHomeDir()
 	if err == nil {
 		os.MkdirAll(filepath.Join(homedir, ".xel"), os.ModePerm)
-		if Version != "dev" {
+		if shared.RuntimeVersion != "dev" {
 			go func() {
 				versionFile := filepath.Join(homedir, ".xel", "version-latest")
 				needCheck := true
@@ -134,11 +131,11 @@ func main() {
 
 				if needCheck {
 					latestVersion := checkNewVersion()
-					if latestVersion != Version {
+					if latestVersion != shared.RuntimeVersion {
 						_ = os.WriteFile(versionFile, []byte(latestVersion), os.ModePerm)
 						fmt.Println(color.YellowString("--------------------------------------------------------------------------------------"))
 						fmt.Print(color.YellowString("A new version of Xel is available! "))
-						fmt.Println(color.RedString(Version), color.YellowString("->"), color.GreenString(latestVersion))
+						fmt.Println(color.RedString(shared.RuntimeVersion), color.YellowString("->"), color.GreenString(latestVersion))
 						fmt.Println(color.YellowString("To update, run:"))
 						fmt.Println(color.YellowString("curl -fsSL https://raw.githubusercontent.com/dev-kas/xel/master/scripts/update.sh | sh"))
 						fmt.Println(color.YellowString("--------------------------------------------------------------------------------------"))
@@ -156,8 +153,8 @@ func main() {
 }
 
 func checkNewVersion() string {
-	if Version == "dev" {
-		return Version
+	if shared.RuntimeVersion == "dev" {
+		return shared.RuntimeVersion
 	}
 
 	type Release struct {
@@ -167,27 +164,27 @@ func checkNewVersion() string {
 	url := "https://api.github.com/repos/dev-kas/xel/releases/latest"
 	resp, err := http.Get(url)
 	if err != nil {
-		return Version
+		return shared.RuntimeVersion
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return Version
+		return shared.RuntimeVersion
 	}
 
 	var release Release
 	err = json.NewDecoder(resp.Body).Decode(&release)
 	if err != nil {
-		return Version
+		return shared.RuntimeVersion
 	}
 	tagName := release.TagName
 	if len(tagName) > 1 && tagName[0] == 'v' {
 		tagName = tagName[1:]
 	} else {
-		return Version
+		return shared.RuntimeVersion
 	}
-	if tagName != Version {
+	if tagName != shared.RuntimeVersion {
 		return tagName
 	}
-	return Version
+	return shared.RuntimeVersion
 }
