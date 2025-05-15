@@ -1,0 +1,24 @@
+const threads = import("xel:threads")
+
+let i = 0
+fn workerFN() {
+    while (i < 100000) {
+        i = i + 1
+    }
+}
+
+
+const worker = threads.spawn(workerFN)
+print("Spawned")
+
+let x = 0
+while (x < 1000) {
+    x = x + 1
+}
+
+worker.kill()
+
+print("Time", worker.time())
+print("DONE!")
+
+print(worker.status())
