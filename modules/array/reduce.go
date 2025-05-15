@@ -40,7 +40,7 @@ var reduce = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environme
 		}
 		res, err := helpers.EvalFnVal(&reducer, callArgs, env)
 		if err != nil {
-			return nil, err.(*errors.RuntimeError)
+			return nil, err
 		}
 		acc = *res
 	}

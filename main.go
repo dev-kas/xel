@@ -15,8 +15,8 @@ import (
 	"xel/helpers"
 	"xel/shared"
 
-	_ "xel/modules/math"
 	_ "xel/modules/array"
+	_ "xel/modules/math"
 	_ "xel/modules/strings"
 
 	"github.com/chzyer/readline"

@@ -33,7 +33,7 @@ var find = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environment
 		}
 		res, err := helpers.EvalFnVal(&predicate, callArgs, env)
 		if err != nil {
-			return nil, err.(*errors.RuntimeError)
+			return nil, err
 		}
 		if res.Type == shared.Boolean && res.Value.(bool) {
 			return &el, nil

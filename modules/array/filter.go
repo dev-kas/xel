@@ -38,7 +38,7 @@ var filter = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environme
 		}
 		out, err := helpers.EvalFnVal(&fn, callArgs, env)
 		if err != nil {
-			return nil, err.(*errors.RuntimeError)
+			return nil, err
 		}
 		if helpers.IsTruthy(out) {
 			result = append(result, val)

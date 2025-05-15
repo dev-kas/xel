@@ -34,7 +34,7 @@ var findIndex = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *enviro
 		}
 		res, err := helpers.EvalFnVal(&predicate, callArgs, env)
 		if err != nil {
-			return nil, err.(*errors.RuntimeError)
+			return nil, err
 		}
 		if res.Type == shared.Boolean && res.Value.(bool) {
 			indexVal := values.MK_NUMBER(float64(i))

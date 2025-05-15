@@ -37,7 +37,7 @@ var forEach = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environm
 		}
 		_, err := helpers.EvalFnVal(&fn, callArgs, env)
 		if err != nil {
-			return nil, err.(*errors.RuntimeError)
+			return nil, err
 		}
 	}
 

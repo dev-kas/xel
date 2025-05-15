@@ -34,7 +34,7 @@ var every = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environmen
 		}
 		res, err := helpers.EvalFnVal(&predicate, callArgs, env)
 		if err != nil {
-			return nil, err.(*errors.RuntimeError)
+			return nil, err
 		}
 		if res.Type == shared.Boolean && !res.Value.(bool) {
 			falseVal := values.MK_BOOL(false)

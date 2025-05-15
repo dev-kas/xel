@@ -38,7 +38,7 @@ var map_ = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environment
 		}
 		out, err := helpers.EvalFnVal(&fn, callArgs, env)
 		if err != nil {
-			return nil, err.(*errors.RuntimeError)
+			return nil, err
 		}
 		result[i] = *out
 	}
