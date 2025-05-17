@@ -13,20 +13,20 @@ func TestInstallCommand(t *testing.T) {
 	ctx := cli.NewContext(nil, set, nil)
 
 	// Get the install command
-	cmd := InstallCommand()
+	cmd := PackageCommands()
 
 	// Check command properties
-	if cmd.Name != "install" {
-		t.Errorf("InstallCommand() name = %s, want %s", cmd.Name, "install")
+	if cmd.Name != "pkg" {
+		t.Errorf("PackageCommands() name = %s, want %s", cmd.Name, "pkg")
 	}
 
-	if cmd.Usage != "Install a package" {
-		t.Errorf("InstallCommand() usage = %s, want %s", cmd.Usage, "Install a package")
+	if cmd.Usage != "Manage packages" {
+		t.Errorf("PackageCommands() usage = %s, want %s", cmd.Usage, "Manage packages")
 	}
 
 	// Execute the command (should not return an error as it's unimplemented)
 	err := cmd.Action(ctx)
 	if err != nil {
-		t.Errorf("InstallCommand() error = %v, want nil", err)
+		t.Errorf("PackageCommands() error = %v, want nil", err)
 	}
 }

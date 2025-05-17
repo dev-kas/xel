@@ -1,0 +1,13 @@
+{
+  "name": "launchpad",
+  "description": "An example for testing `rockets` library loading",
+  "version": "0.1.0",
+  "xel": "^0.6.0",
+  "engine": "^2.1.0",
+  "main": "main.xel",
+  "deps": {
+	  "rockets": ">0.1.0"
+  },
+  "author": "KAS",
+  "license": "MIT"
+}

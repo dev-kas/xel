@@ -30,7 +30,7 @@ import (
 func main() {
 	globals.Globalize(&shared.XelRootEnv)
 	cli.VersionPrinter = func(c *cli.Context) {
-		fmt.Printf("VirtLang Engine version: %s - Xel version: %s \n", color.CyanString(shared.EngineVersion), color.CyanString(c.App.Version))
+		fmt.Printf("VirtLang Engine version: %s - Xel version: %s \n", shared.ColorPalette.Version(shared.EngineVersion), shared.ColorPalette.Version(c.App.Version))
 	}
 
 	app := &cli.App{
@@ -39,18 +39,18 @@ func main() {
 		Version:  shared.RuntimeVersion,
 		Commands: cmds.GetCommands(),
 		Action: func(c *cli.Context) error {
-			color.Cyan("Welcome to Xel v%s REPL (VirtLang v%s)!", shared.RuntimeVersion, shared.EngineVersion)
-			color.RGB(105, 105, 105).Println("Type '!exit' to exit the REPL.")
+			shared.ColorPalette.Welcome("Welcome to Xel v%s REPL (VirtLang v%s)!", shared.RuntimeVersion, shared.EngineVersion)
+			shared.ColorPalette.GrayMessage("Type '!exit' to exit the REPL.")
 
 			rl, err := readline.NewEx(&readline.Config{
-				Prompt:            color.BlueString("> "),
+				Prompt:            shared.ColorPalette.PromptStr("> "),
 				HistoryFile:       filepath.Join(os.TempDir(), "xel_history.tmp"),
 				InterruptPrompt:   "^C",
 				EOFPrompt:         "!exit",
 				HistorySearchFold: true,
 			})
 			if err != nil {
-				color.Red("Error initializing readline: %s", err.Error())
+				shared.ColorPalette.Error.Printf("Error initializing readline: %s", err.Error())
 				return err
 			}
 			sigChan := make(chan os.Signal, 1)
@@ -73,22 +73,22 @@ func main() {
 				select {
 				case sig := <-sigChan:
 					if sig == syscall.SIGINT {
-						color.RGB(105, 105, 105).Println("TODO: Stop current execution")
+						shared.ColorPalette.GrayMessage("TODO: Stop current execution")
 						continue
 					}
 				case err := <-errChan:
 					if err.Error() == "EOF" {
-						color.New(color.FgHiRed).Println("Exiting REPL.")
+						shared.ColorPalette.ExitMessage.Println("Exiting REPL.")
 						return nil
 					}
 					if err.Error() == "Interrupt" {
-						color.RGB(105, 105, 105).Println("TODO: Stop current execution")
+						shared.ColorPalette.GrayMessage("TODO: Stop current execution")
 						continue
 					}
-					color.Red("Error reading line: %s", err.Error())
+					shared.ColorPalette.Error.Printf("Error reading line: %s", err.Error())
 				case line := <-inputChan:
 					if line == "!exit" {
-						color.New(color.FgHiRed).Println("Exiting REPL.")
+						shared.ColorPalette.ExitMessage.Println("Exiting REPL.")
 						return nil
 					}
 					if line == "" {
@@ -98,7 +98,7 @@ func main() {
 					p := parser.New()
 					program, err := p.ProduceAST(line)
 					if err != nil {
-						color.Red("Error: %s", err.Error())
+						shared.ColorPalette.Error.Printf("Error: %s", err.Error())
 						continue
 					}
 
@@ -118,7 +118,7 @@ func main() {
 	homedir, err := os.UserHomeDir()
 	if err == nil {
 		os.MkdirAll(filepath.Join(homedir, ".xel"), os.ModePerm)
-		if shared.RuntimeVersion != "dev" {
+		if shared.RuntimeVersion != "" {
 			go func() {
 				versionFile := filepath.Join(homedir, ".xel", "version-latest")
 				needCheck := true
@@ -147,13 +147,13 @@ func main() {
 
 	err = app.Run(os.Args)
 	if err != nil {
-		color.Red("Error: %s", err.Error())
+		shared.ColorPalette.Error.Printf("Error: %s", err.Error())
 		os.Exit(1)
 	}
 }
 
 func checkNewVersion() string {
-	if shared.RuntimeVersion == "dev" {
+	if shared.RuntimeVersion == "" {
 		return shared.RuntimeVersion
 	}
 

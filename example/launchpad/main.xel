@@ -1,0 +1,13 @@
+print("Attempting to load a library")
+
+let manifestName = proc.manifest.name
+const rockets = import("rockets")
+let newManifestName = proc.manifest.name
+
+if ((import("xel:strings")).equal(manifestName, newManifestName)) {
+	print("Manifest name is safe!")
+} else {
+	print("Identity theft! The manifest name has changed!")
+}
+
+rockets.print(4)

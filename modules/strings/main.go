@@ -34,6 +34,7 @@ func module() (*shared.RuntimeValue, *errors.RuntimeError) {
 		"split":       &split,
 		"toArray":     &toArray,
 		"format":      &format,
+		"equal":       &equal,
 	})
 
 	return &mod, nil

@@ -7,6 +7,7 @@ func GetCommands() []*cli.Command {
 	return []*cli.Command{
 		RunCommand(),
 		InitCommand(),
-		InstallCommand(),
+		PackageCommands(),
+		TemplateCommand(),
 	}
 }
