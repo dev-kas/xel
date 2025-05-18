@@ -27,9 +27,9 @@ func Stringify(value shared.RuntimeValue, internal bool) string {
 	case shared.Nil:
 		output += "nil"
 	case shared.Object:
-		output += "{\n"
+		output += "{\r\n"
 		for key, val := range value.Value.(map[string]*shared.RuntimeValue) {
-			output += "  " + key + ": " + Stringify(*val, true) + "\n"
+			output += "  " + key + ": " + Stringify(*val, true) + "\r\n"
 		}
 		output += "}"
 	case shared.Array:
