@@ -2,10 +2,12 @@ package array
 
 import (
 	"fmt"
-	"xel/helpers"
+
+	xelHelpers "xel/helpers"
 
 	"github.com/dev-kas/virtlang-go/v2/environment"
 	"github.com/dev-kas/virtlang-go/v2/errors"
+	"github.com/dev-kas/virtlang-go/v2/helpers"
 	"github.com/dev-kas/virtlang-go/v2/shared"
 	"github.com/dev-kas/virtlang-go/v2/values"
 )
@@ -36,7 +38,7 @@ var filter = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environme
 			values.MK_NUMBER(float64(i)),
 			args[0],
 		}
-		out, err := helpers.EvalFnVal(&fn, callArgs, env)
+		out, err := xelHelpers.EvalFnVal(&fn, callArgs, env)
 		if err != nil {
 			return nil, err
 		}
