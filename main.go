@@ -105,7 +105,7 @@ func main() {
 					output, oerr := evaluator.Evaluate(program, &env, shared.XelRootDebugger)
 					if oerr != nil && len(shared.XelRootDebugger.Snapshots) > 0 {
 						stackTrace := shared.XelRootDebugger.Snapshots[0]
-						stackTraceStr := helpers.GenerateStackTrace(&stackTrace, "")
+						stackTraceStr := helpers.GenerateStackTrace(stackTrace.Stack, "")
 						shared.ColorPalette.Error.Println(stackTraceStr)
 						shared.ColorPalette.Error.Printf("Error: %s", oerr.Error())
 						shared.XelRootDebugger.Snapshots = nil

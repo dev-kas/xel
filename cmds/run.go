@@ -204,7 +204,7 @@ func RunCommand() *cli.Command {
 			if evalErr != nil {
 				// show the stack trace
 				stackTrace := xShared.XelRootDebugger.Snapshots[0]
-				stackTraceStr := helpers.GenerateStackTrace(&stackTrace, cwd)
+				stackTraceStr := helpers.GenerateStackTrace(stackTrace.Stack, cwd)
 				xShared.ColorPalette.Error.Println(stackTraceStr)
 				return evalErr
 			}

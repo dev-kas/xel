@@ -9,5 +9,6 @@ func GetCommands() []*cli.Command {
 		InitCommand(),
 		PackageCommands(),
 		TemplateCommand(),
+		DebugCommand(),
 	}
 }

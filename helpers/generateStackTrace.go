@@ -8,15 +8,15 @@ import (
 	"github.com/dev-kas/virtlang-go/v3/debugger"
 )
 
-func GenerateStackTrace(snapshot *debugger.Snapshot, cwd string) string {
+func GenerateStackTrace(stack debugger.CallStack, cwd string) string {
 	out := ""
 
-	out += xShared.ColorPalette.Error.Sprintf("Stack trace (Most recent call first) (Stack Depth: %d)\n", len(snapshot.Stack))
+	out += xShared.ColorPalette.Error.Sprintf("Stack trace (Most recent call first) (Stack Depth: %d)\n", len(stack))
 	// The stack has most recent call last, so we reverse traverse it
-	for i := len(snapshot.Stack) - 1; i >= 0; i-- {
-		fname := snapshot.Stack[i].Filename
-		name := snapshot.Stack[i].Name
-		line := snapshot.Stack[i].Line
+	for i := len(stack) - 1; i >= 0; i-- {
+		fname := stack[i].Filename
+		name := stack[i].Name
+		line := stack[i].Line
 
 		relFname, err := filepath.Rel(cwd, fname)
 		if err == nil {
