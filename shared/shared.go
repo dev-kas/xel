@@ -104,9 +104,9 @@ var ColorPalette = struct {
 	Error:   color.New(color.FgRed),
 
 	// Specific color functions
-	Welcome:   color.Cyan,
-	Version:   color.CyanString,
-	PromptStr: color.BlueString,
+	Welcome:     color.Cyan,
+	Version:     color.CyanString,
+	PromptStr:   color.BlueString,
 	GrayMessage: color.RGB(105, 105, 105),
 	ExitMessage: color.New(color.FgHiRed),
 }
