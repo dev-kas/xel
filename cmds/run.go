@@ -200,7 +200,6 @@ func RunCommand() *cli.Command {
 			env.DeclareVar("__filename__", values.MK_STRING(fmt.Sprintf("\"%s\"", filename)), true)
 			env.DeclareVar("__dirname__", values.MK_STRING(fmt.Sprintf("\"%s\"", filepath.Dir(filename))), true)
 
-			// xShared.XelRootDebugger.BreakpointManager.Set(filename, 3)
 			_, evalErr := evaluator.Evaluate(program, &env, xShared.XelRootDebugger)
 			if evalErr != nil {
 				// show the stack trace

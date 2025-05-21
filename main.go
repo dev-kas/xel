@@ -102,13 +102,18 @@ func main() {
 						continue
 					}
 
-					output, oerr := evaluator.Evaluate(program, &env, nil)
-					if oerr != nil {
-						color.Red("Error: %s", oerr.Error())
+					output, oerr := evaluator.Evaluate(program, &env, shared.XelRootDebugger)
+					if oerr != nil && len(shared.XelRootDebugger.Snapshots) > 0 {
+						stackTrace := shared.XelRootDebugger.Snapshots[0]
+						stackTraceStr := helpers.GenerateStackTrace(&stackTrace, "")
+						shared.ColorPalette.Error.Println(stackTraceStr)
+						shared.ColorPalette.Error.Printf("Error: %s", oerr.Error())
+						shared.XelRootDebugger.Snapshots = nil
+
 						continue
 					}
 					if output != nil {
-						color.RGB(105, 105, 105).Println(fmt.Sprintf("< %v", helpers.Stringify(*output, true)))
+						shared.ColorPalette.GrayMessage.Println(fmt.Sprintf("< %v", helpers.Stringify(*output, true)))
 					}
 				}
 			}

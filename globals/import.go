@@ -53,7 +53,6 @@ var Import = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environme
 	// Check if its a module name or a local file
 	if libname[0] == '.' {
 		// It's a local file
-		libpath = filepath.Join(libname, libpath)
 		dirnameRuntimeVal, err := env.LookupVar("__dirname__")
 		if err != nil {
 			return nil, &errors.RuntimeError{
@@ -200,7 +199,7 @@ func evaluateModule(libpath string, env *environment.Environment) (*shared.Runti
 	placeholderExports := values.MK_NIL()
 	importCache[libpath] = &placeholderExports
 
-	libExports, evaluatorError := evaluator.Evaluate(lib, &libScope, nil)
+	libExports, evaluatorError := evaluator.Evaluate(lib, &libScope, xShared.XelRootDebugger)
 	if evaluatorError != nil {
 		return nil, &errors.RuntimeError{
 			Message: fmt.Sprintf("Failed to evaluate file %s: %v", libpath, evaluatorError),

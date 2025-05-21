@@ -1,0 +1,13 @@
+// Perform risky operations
+
+fn someWorker(){
+    return someWorker2()
+}
+
+fn someWorker2(){
+    return asdf()
+}
+
+return (fn(){
+    return someWorker()
+})
