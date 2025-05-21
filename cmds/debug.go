@@ -231,6 +231,10 @@ func debug_repl(file, cwd string) {
 	// we wont have to type the long thingy every time
 	dbgr := xShared.XelRootDebugger
 
+	// First thing we will do here
+	// is stepping into the program node
+	dbgr.StepInto()
+
 	// This is the metadata for a command
 	type Command struct {
 		Name        string
