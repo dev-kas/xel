@@ -47,7 +47,6 @@ func ResolveModule(moduleName string, constraint string) (string, *shared.Projec
 	if len(filteredVersions) != 0 {
 		// Yep, we definitely got some
 
-
 		// Pick the highest version
 		var highestVersion *semver.Version
 		for version := range filteredVersions {

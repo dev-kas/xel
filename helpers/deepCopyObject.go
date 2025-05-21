@@ -1,7 +1,7 @@
 package helpers
 
 import (
-	"github.com/dev-kas/virtlang-go/v2/shared"
+	"github.com/dev-kas/virtlang-go/v3/shared"
 )
 
 // DeepCopyObject creates a deep copy of a map of RuntimeValue objects
@@ -12,7 +12,6 @@ func DeepCopyObject(obj map[string]*shared.RuntimeValue) map[string]*shared.Runt
 	}
 	return cloned
 }
-
 
 // DeepCopyRuntimeValue creates a deep copy of a single RuntimeValue
 func DeepCopyRuntimeValue(rtv *shared.RuntimeValue) *shared.RuntimeValue {

@@ -1,0 +1,31 @@
+/** Bug Bounty Example
+ * 
+ * This is a simple example to demonstrate the working of Xel's debugger.
+ * 
+ */
+
+fn greet(name) {
+    print("Hello, " + name)
+    abracadabra()
+}
+
+let personName = "Xel User"
+
+let i = 0
+fn abracadabra() {
+    i = i + 1
+    if (i >= 15) {
+        return (fn() {
+            try {
+                spell("expelliarmus")
+            } catch e {
+                print("Error: " + e)
+            }
+        })()
+    }
+    abracadabra()
+}
+
+greet(personName)
+
+ajkhsgdasjhkgdajkhgsd()

@@ -20,9 +20,9 @@ import (
 	_ "xel/modules/strings"
 
 	"github.com/chzyer/readline"
-	"github.com/dev-kas/virtlang-go/v2/environment"
-	"github.com/dev-kas/virtlang-go/v2/evaluator"
-	"github.com/dev-kas/virtlang-go/v2/parser"
+	"github.com/dev-kas/virtlang-go/v3/environment"
+	"github.com/dev-kas/virtlang-go/v3/evaluator"
+	"github.com/dev-kas/virtlang-go/v3/parser"
 	"github.com/fatih/color"
 	"github.com/urfave/cli/v2"
 )
@@ -40,7 +40,7 @@ func main() {
 		Commands: cmds.GetCommands(),
 		Action: func(c *cli.Context) error {
 			shared.ColorPalette.Welcome("Welcome to Xel v%s REPL (VirtLang v%s)!", shared.RuntimeVersion, shared.EngineVersion)
-			shared.ColorPalette.GrayMessage("Type '!exit' to exit the REPL.")
+			shared.ColorPalette.GrayMessage.Println("Type '!exit' to exit the REPL.")
 
 			rl, err := readline.NewEx(&readline.Config{
 				Prompt:            shared.ColorPalette.PromptStr("> "),
@@ -73,7 +73,7 @@ func main() {
 				select {
 				case sig := <-sigChan:
 					if sig == syscall.SIGINT {
-						shared.ColorPalette.GrayMessage("TODO: Stop current execution")
+						shared.ColorPalette.GrayMessage.Print("TODO: Stop current execution")
 						continue
 					}
 				case err := <-errChan:
@@ -82,7 +82,7 @@ func main() {
 						return nil
 					}
 					if err.Error() == "Interrupt" {
-						shared.ColorPalette.GrayMessage("TODO: Stop current execution")
+						shared.ColorPalette.GrayMessage.Print("TODO: Stop current execution")
 						continue
 					}
 					shared.ColorPalette.Error.Printf("Error reading line: %s", err.Error())
@@ -95,14 +95,14 @@ func main() {
 						continue
 					}
 
-					p := parser.New()
+					p := parser.New("<REPL>")
 					program, err := p.ProduceAST(line)
 					if err != nil {
 						shared.ColorPalette.Error.Printf("Error: %s", err.Error())
 						continue
 					}
 
-					output, oerr := evaluator.Evaluate(program, &env)
+					output, oerr := evaluator.Evaluate(program, &env, nil)
 					if oerr != nil {
 						color.Red("Error: %s", oerr.Error())
 						continue

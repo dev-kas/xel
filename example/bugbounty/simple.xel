@@ -1,0 +1,17 @@
+fn safeRisk(i) {
+    if (i >= 0) {
+        return nil
+    }
+    try {
+        // Perform risky
+        asdfghjkl()
+    } catch e {
+        print("Error: " + e)
+    }
+    safeRisk(i + 1)
+}
+
+safeRisk(0)
+
+// perform another risky operation
+wasd()

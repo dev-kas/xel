@@ -7,16 +7,16 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/Masterminds/semver/v3"
 	"xel/helpers"
 	xShared "xel/shared"
 
-	"github.com/dev-kas/virtlang-go/v2/environment"
-	"github.com/dev-kas/virtlang-go/v2/errors"
-	"github.com/dev-kas/virtlang-go/v2/evaluator"
-	"github.com/dev-kas/virtlang-go/v2/parser"
-	"github.com/dev-kas/virtlang-go/v2/shared"
-	"github.com/dev-kas/virtlang-go/v2/values"
+	"github.com/Masterminds/semver/v3"
+
+	"github.com/dev-kas/virtlang-go/v3/environment"
+	"github.com/dev-kas/virtlang-go/v3/evaluator"
+	"github.com/dev-kas/virtlang-go/v3/parser"
+	"github.com/dev-kas/virtlang-go/v3/shared"
+	"github.com/dev-kas/virtlang-go/v3/values"
 	"github.com/fatih/color"
 	"github.com/urfave/cli/v2"
 )
@@ -34,6 +34,10 @@ func RunCommand() *cli.Command {
 			}
 
 			filename := c.Args().Get(0)
+			cwd, cwd_err := os.Getwd()
+			if cwd_err != nil {
+				return cwd_err
+			}
 
 			// Check if file has .xel extension
 			if !strings.HasSuffix(filename, ".xel") {
@@ -164,17 +168,8 @@ func RunCommand() *cli.Command {
 				return fmt.Errorf("failed to read file %s: %v", filename, err)
 			}
 
-			program, parseErr := parser.New().ProduceAST(string(content))
+			program, parseErr := parser.New(filename).ProduceAST(string(content))
 			if parseErr != nil {
-				if err, ok := parseErr.(*errors.SyntaxError); ok {
-					start := err.Start + 1
-					end := start + err.Difference
-
-					startLine, startCol := helpers.PosToLineCol(content, start)
-					endLine, endCol := helpers.PosToLineCol(content, end)
-
-					color.Red("From %s:%d:%d to %s:%d:%d\n", filename, startLine, startCol, filename, endLine, endCol)
-				}
 				return parseErr
 			}
 
@@ -205,9 +200,13 @@ func RunCommand() *cli.Command {
 			env.DeclareVar("__filename__", values.MK_STRING(fmt.Sprintf("\"%s\"", filename)), true)
 			env.DeclareVar("__dirname__", values.MK_STRING(fmt.Sprintf("\"%s\"", filepath.Dir(filename))), true)
 
-			_, evalErr := evaluator.Evaluate(program, &env)
-
+			// xShared.XelRootDebugger.BreakpointManager.Set(filename, 3)
+			_, evalErr := evaluator.Evaluate(program, &env, xShared.XelRootDebugger)
 			if evalErr != nil {
+				// show the stack trace
+				stackTrace := xShared.XelRootDebugger.Snapshots[0]
+				stackTraceStr := helpers.GenerateStackTrace(&stackTrace, cwd)
+				xShared.ColorPalette.Error.Println(stackTraceStr)
 				return evalErr
 			}
 

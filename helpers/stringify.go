@@ -3,8 +3,8 @@ package helpers
 import (
 	"fmt"
 
-	"github.com/dev-kas/virtlang-go/v2/shared"
-	"github.com/dev-kas/virtlang-go/v2/values"
+	"github.com/dev-kas/virtlang-go/v3/shared"
+	"github.com/dev-kas/virtlang-go/v3/values"
 )
 
 func Stringify(value shared.RuntimeValue, internal bool) string {

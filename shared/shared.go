@@ -5,7 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/dev-kas/virtlang-go/v2/environment"
+	"github.com/dev-kas/virtlang-go/v3/debugger"
+	"github.com/dev-kas/virtlang-go/v3/environment"
 	"github.com/fatih/color"
 )
 
@@ -13,6 +14,7 @@ var RuntimeVersion string
 var EngineVersion string
 
 var XelRootEnv environment.Environment = environment.NewEnvironment(nil)
+var XelRootDebugger *debugger.Debugger = debugger.NewDebugger(&XelRootEnv)
 
 func XelDir() string {
 	homeDir, err := os.UserHomeDir()
@@ -92,7 +94,7 @@ var ColorPalette = struct {
 	Welcome     func(format string, a ...interface{})
 	Version     func(format string, a ...interface{}) string
 	PromptStr   func(format string, a ...interface{}) string
-	GrayMessage func(format string, a ...interface{})
+	GrayMessage *color.Color
 	ExitMessage *color.Color
 }{
 	// Basic colors
@@ -105,9 +107,7 @@ var ColorPalette = struct {
 	Welcome:   color.Cyan,
 	Version:   color.CyanString,
 	PromptStr: color.BlueString,
-	GrayMessage: func(format string, a ...interface{}) {
-		color.RGB(105, 105, 105).Printf(format, a...)
-	},
+	GrayMessage: color.RGB(105, 105, 105),
 	ExitMessage: color.New(color.FgHiRed),
 }
 

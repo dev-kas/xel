@@ -8,12 +8,12 @@ import (
 	"xel/modules"
 	xShared "xel/shared"
 
-	"github.com/dev-kas/virtlang-go/v2/environment"
-	"github.com/dev-kas/virtlang-go/v2/errors"
-	"github.com/dev-kas/virtlang-go/v2/evaluator"
-	"github.com/dev-kas/virtlang-go/v2/parser"
-	"github.com/dev-kas/virtlang-go/v2/shared"
-	"github.com/dev-kas/virtlang-go/v2/values"
+	"github.com/dev-kas/virtlang-go/v3/environment"
+	"github.com/dev-kas/virtlang-go/v3/errors"
+	"github.com/dev-kas/virtlang-go/v3/evaluator"
+	"github.com/dev-kas/virtlang-go/v3/parser"
+	"github.com/dev-kas/virtlang-go/v3/shared"
+	"github.com/dev-kas/virtlang-go/v3/values"
 )
 
 var importCache = map[string]*shared.RuntimeValue{}
@@ -111,7 +111,7 @@ var Import = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environme
 		}
 
 		constraint := dependencies[libname].Value.(string)
-		constraint = constraint[1:len(constraint)-1]
+		constraint = constraint[1 : len(constraint)-1]
 
 		pkgManifestPath, pkgManifest, resolutionErr := helpers.ResolveModule(libname, constraint)
 		if resolutionErr != nil {
@@ -186,7 +186,7 @@ func evaluateModule(libpath string, env *environment.Environment) (*shared.Runti
 		}
 	}
 
-	p := parser.New()
+	p := parser.New(libpath)
 	lib, parserError := p.ProduceAST(string(content))
 	if parserError != nil {
 		return nil, &errors.RuntimeError{
@@ -200,7 +200,7 @@ func evaluateModule(libpath string, env *environment.Environment) (*shared.Runti
 	placeholderExports := values.MK_NIL()
 	importCache[libpath] = &placeholderExports
 
-	libExports, evaluatorError := evaluator.Evaluate(lib, &libScope)
+	libExports, evaluatorError := evaluator.Evaluate(lib, &libScope, nil)
 	if evaluatorError != nil {
 		return nil, &errors.RuntimeError{
 			Message: fmt.Sprintf("Failed to evaluate file %s: %v", libpath, evaluatorError),

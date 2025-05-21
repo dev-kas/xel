@@ -5,8 +5,8 @@ import (
 	"math"
 	"os"
 
-	"github.com/dev-kas/virtlang-go/v2/environment"
-	"github.com/dev-kas/virtlang-go/v2/values"
+	"github.com/dev-kas/virtlang-go/v3/environment"
+	"github.com/dev-kas/virtlang-go/v3/values"
 )
 
 func Globalize(env *environment.Environment) {

@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/dev-kas/virtlang-go/v2/ast"
-	"github.com/dev-kas/virtlang-go/v2/environment"
-	"github.com/dev-kas/virtlang-go/v2/errors"
-	"github.com/dev-kas/virtlang-go/v2/evaluator"
-	"github.com/dev-kas/virtlang-go/v2/shared"
-	"github.com/dev-kas/virtlang-go/v2/values"
+	"github.com/dev-kas/virtlang-go/v3/ast"
+	"github.com/dev-kas/virtlang-go/v3/environment"
+	"github.com/dev-kas/virtlang-go/v3/errors"
+	"github.com/dev-kas/virtlang-go/v3/evaluator"
+	"github.com/dev-kas/virtlang-go/v3/shared"
+	"github.com/dev-kas/virtlang-go/v3/values"
 )
 
 func evalFnValCore(ctx context.Context, fnValue *shared.RuntimeValue, args []shared.RuntimeValue, env *environment.Environment) (*shared.RuntimeValue, *errors.RuntimeError) {
@@ -69,7 +69,7 @@ func evalFnValCore(ctx context.Context, fnValue *shared.RuntimeValue, args []sha
 		}
 
 		// Evaluate the call expression
-		ret, evalerr := evaluator.Evaluate(callExpr, &tempEnv)
+		ret, evalerr := evaluator.Evaluate(callExpr, &tempEnv, nil)
 		if evalerr != nil {
 			if evalerr.InternalCommunicationProtocol != nil &&
 				evalerr.InternalCommunicationProtocol.Type == errors.ICP_Return {
