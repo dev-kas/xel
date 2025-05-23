@@ -1,0 +1,255 @@
+[2025-05-23T20:13:30.846945635+05:30] {"command":"evaluate","arguments":{"expression":"a == b","frameId":0,"context":"watch"},"type":"request","seq":11}
+---
+
+{
+  "direction": "INCOMING DAP ← CLIENT",
+  "message_summary": {
+    "command": "evaluate",
+    "event": "",
+    "seq": 11,
+    "type": "request"
+  },
+  "timestamp": "2025-05-23T20:13:52.953801527+05:30"
+}
+---
+
+{
+  "seq": 11,
+  "type": "request",
+  "command": "evaluate",
+  "arguments": {
+    "expression": "a == b",
+    "frameId": 0,
+    "context": "watch"
+  }
+}
+---
+[2025-05-23T20:13:52.953995313+05:30] HANDLER: Unhandled DAP command: evaluate
+---
+
+{
+  "direction": "OUTGOING ERROR RESPONSE → CLIENT",
+  "message": {
+    "seq": 13,
+    "type": "response",
+    "request_seq": 11,
+    "command": "evaluate",
+    "success": false,
+    "message": "Command 'evaluate' not supported.",
+    "body": {
+      "error": {
+        "message": "Command 'evaluate' not supported."
+      }
+    }
+  },
+  "timestamp": "2025-05-23T20:13:52.954025151+05:30"
+}
+---
+[2025-05-23T20:13:52.954093221+05:30] HANDLER: Finished handling command: evaluate overall.
+---
+[2025-05-23T20:14:49.894987298+05:30] {"command":"setBreakpoints","arguments":{"source":{"name":"server.go","path":"/home/kas/Documents/Projects/xel/dap/server.go"},"lines":[29],"breakpoints":[{"line":29}],"sourceModified":false},"type":"request","seq":12}
+---
+
+{
+  "direction": "INCOMING DAP ← CLIENT",
+  "message_summary": {
+    "command": "setBreakpoints",
+    "event": "",
+    "seq": 12,
+    "type": "request"
+  },
+  "timestamp": "2025-05-23T20:15:02.021105825+05:30"
+}
+---
+
+{
+  "seq": 12,
+  "type": "request",
+  "command": "setBreakpoints",
+  "arguments": {
+    "source": {
+      "name": "server.go",
+      "path": "/home/kas/Documents/Projects/xel/dap/server.go"
+    },
+    "lines": [
+      29
+    ],
+    "breakpoints": [
+      {
+        "line": 29
+      }
+    ],
+    "sourceModified": false
+  }
+}
+---
+[2025-05-23T20:15:02.021352298+05:30] HANDLER: setBreakpoints for /home/kas/Documents/Projects/xel/dap/server.go (abs: /home/kas/Documents/Projects/xel/dap/server.go). Raw args: map[breakpoints:[map[line:29]] lines:[29] source:map[name:server.go path:/home/kas/Documents/Projects/xel/dap/server.go] sourceModified:false]
+---
+[2025-05-23T20:15:02.021391853+05:30] HANDLER: setBreakpoints - Processing 'breakpoints' array (len 1)
+---
+[2025-05-23T20:15:02.021423071+05:30]   BP 0: Added line 29 from 'breakpoints' entry.
+---
+[2025-05-23T20:15:02.021452009+05:30] HANDLER: setBreakpoints - (Conceptual) Cleared existing BPs for /home/kas/Documents/Projects/xel/dap/server.go.
+---
+[2025-05-23T20:15:02.021477836+05:30] HANDLER: setBreakpoints - Registering BP with BMgr at /home/kas/Documents/Projects/xel/dap/server.go:29
+---
+
+{
+  "direction": "OUTGOING RESPONSE → CLIENT",
+  "message": {
+    "seq": 14,
+    "type": "response",
+    "request_seq": 12,
+    "command": "setBreakpoints",
+    "success": true,
+    "body": {
+      "breakpoints": [
+        {
+          "line": 29,
+          "source": {
+            "name": "server.go",
+            "path": "/home/kas/Documents/Projects/xel/dap/server.go"
+          },
+          "verified": true
+        }
+      ]
+    }
+  },
+  "timestamp": "2025-05-23T20:15:02.021517235+05:30"
+}
+---
+[2025-05-23T20:15:02.023096271+05:30] HANDLER: setBreakpoints - Replied with 1 'verified' BPs for /home/kas/Documents/Projects/xel/dap/server.go.
+---
+[2025-05-23T20:15:02.023292184+05:30] HANDLER: Finished handling command: setBreakpoints overall.
+---
+[2025-05-23T20:16:48.402522639+05:30] {"command":"setBreakpoints","arguments":{"source":{"name":"server.go","path":"/home/kas/Documents/Projects/xel/dap/server.go"},"lines":[],"breakpoints":[],"sourceModified":false},"type":"request","seq":13}
+---
+
+{
+  "direction": "INCOMING DAP ← CLIENT",
+  "message_summary": {
+    "command": "setBreakpoints",
+    "event": "",
+    "seq": 13,
+    "type": "request"
+  },
+  "timestamp": "2025-05-23T20:16:59.939386753+05:30"
+}
+---
+
+{
+  "seq": 13,
+  "type": "request",
+  "command": "setBreakpoints",
+  "arguments": {
+    "source": {
+      "name": "server.go",
+      "path": "/home/kas/Documents/Projects/xel/dap/server.go"
+    },
+    "lines": [],
+    "breakpoints": [],
+    "sourceModified": false
+  }
+}
+---
+[2025-05-23T20:16:59.9397539+05:30] HANDLER: setBreakpoints for /home/kas/Documents/Projects/xel/dap/server.go (abs: /home/kas/Documents/Projects/xel/dap/server.go). Raw args: map[breakpoints:[] lines:[] source:map[name:server.go path:/home/kas/Documents/Projects/xel/dap/server.go] sourceModified:false]
+---
+[2025-05-23T20:16:59.939918962+05:30] HANDLER: setBreakpoints - Neither 'breakpoints' nor 'lines' found with items for /home/kas/Documents/Projects/xel/dap/server.go. Assuming clear all.
+---
+[2025-05-23T20:16:59.939971344+05:30] HANDLER: setBreakpoints - (Conceptual) Cleared existing BPs for /home/kas/Documents/Projects/xel/dap/server.go.
+---
+
+{
+  "direction": "OUTGOING RESPONSE → CLIENT",
+  "message": {
+    "seq": 15,
+    "type": "response",
+    "request_seq": 13,
+    "command": "setBreakpoints",
+    "success": true,
+    "body": {
+      "breakpoints": []
+    }
+  },
+  "timestamp": "2025-05-23T20:16:59.940017069+05:30"
+}
+---
+[2025-05-23T20:16:59.94013808+05:30] HANDLER: setBreakpoints - Replied with 0 'verified' BPs for /home/kas/Documents/Projects/xel/dap/server.go.
+---
+[2025-05-23T20:16:59.940185589+05:30] HANDLER: Finished handling command: setBreakpoints overall.
+---
+[2025-05-23T20:17:59.923770779+05:30] {"command":"evaluate","arguments":{"expression":"a == b","frameId":0,"context":"watch"},"type":"request","seq":14}
+---
+
+{
+  "direction": "INCOMING DAP ← CLIENT",
+  "message_summary": {
+    "command": "evaluate",
+    "event": "",
+    "seq": 14,
+    "type": "request"
+  },
+  "timestamp": "2025-05-23T20:18:04.610147617+05:30"
+}
+---
+
+{
+  "seq": 14,
+  "type": "request",
+  "command": "evaluate",
+  "arguments": {
+    "expression": "a == b",
+    "frameId": 0,
+    "context": "watch"
+  }
+}
+---
+[2025-05-23T20:18:04.610504969+05:30] HANDLER: Unhandled DAP command: evaluate
+---
+
+{
+  "direction": "OUTGOING ERROR RESPONSE → CLIENT",
+  "message": {
+    "seq": 16,
+    "type": "response",
+    "request_seq": 14,
+    "command": "evaluate",
+    "success": false,
+    "message": "Command 'evaluate' not supported.",
+    "body": {
+      "error": {
+        "message": "Command 'evaluate' not supported."
+      }
+    }
+  },
+  "timestamp": "2025-05-23T20:18:04.610542503+05:30"
+}
+---
+[2025-05-23T20:18:04.611140474+05:30] HANDLER: Finished handling command: evaluate overall.
+---
+[2025-05-23T20:18:42.010827556+05:30] {"command":"next","arguments":{"threadId":1},"type":"request","seq":15}
+---
+
+{
+  "direction": "INCOMING DAP ← CLIENT",
+  "message_summary": {
+    "command": "next",
+    "event": "",
+    "seq": 15,
+    "type": "request"
+  },
+  "timestamp": "2025-05-23T20:19:11.668570451+05:30"
+}
+---
+
+{
+  "seq": 15,
+  "type": "request",
+  "command": "next",
+  "arguments": {
+    "threadId": 1
+  }
+}
+---
+[2025-05-23T20:20:58.458447625+05:30] HANDLER: next - Received. State before: paused
+---

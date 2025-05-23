@@ -1,0 +1,714 @@
+package dap
+
+import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"os"
+	"path"          // For path.Base in DAP Source object name field
+	"path/filepath" // For filepath.Abs
+	"sync"          // For managing termination signal
+	"time"
+	xShared "xel/shared" // Your project's shared package
+
+	"github.com/dev-kas/virtlang-go/v3/ast"
+	"github.com/dev-kas/virtlang-go/v3/debugger"
+	"github.com/dev-kas/virtlang-go/v3/environment" // For xShared.XelRootDebugger.Environment type
+	"github.com/dev-kas/virtlang-go/v3/evaluator"
+	"github.com/dev-kas/virtlang-go/v3/parser"
+)
+
+var (
+	programAST              *ast.Program
+	initialStopOnEntry      bool = false
+	debuggerStatePollerDone chan struct{}
+	dapInitiatedPause       bool       = false // True if DAP 'pause' request caused the current PausedState
+	isStepping              bool       = false // True if a DAP step command is in progress
+	isSteppingMutex         sync.Mutex         // To protect isStepping flag
+
+	programTerminated      chan bool
+	programTerminatedMutex sync.Mutex
+)
+
+// DAPMessage and DAPResponse structs
+type DAPMessage struct {
+	Seq       int             `json:"seq"`
+	Type      string          `json:"type"`
+	Command   string          `json:"command,omitempty"`
+	Event     string          `json:"event,omitempty"`
+	Body      json.RawMessage `json:"body,omitempty"`
+	Arguments json.RawMessage `json:"arguments,omitempty"`
+}
+
+type DAPResponse struct {
+	Seq        int         `json:"seq"`
+	Type       string      `json:"type"`
+	RequestSeq int         `json:"request_seq"`
+	Command    string      `json:"command"`
+	Success    bool        `json:"success"`
+	Message    string      `json:"message,omitempty"`
+	Body       interface{} `json:"body,omitempty"`
+}
+
+func logIncomingDAPMessageToLogFile(msg DAPMessage) {
+	contextLog := map[string]interface{}{
+		"direction": "INCOMING DAP ← CLIENT", "timestamp": time.Now().Format(time.RFC3339Nano),
+		"message_summary": map[string]interface{}{"seq": msg.Seq, "type": msg.Type, "command": msg.Command, "event": msg.Event},
+	}
+	appendToFile(contextLog, "")
+	appendToFile(msg, "")
+}
+
+func handleDAPMessage(msg DAPMessage, w io.Writer, messageIdx *int, storage map[string]interface{}) {
+	logIncomingDAPMessageToLogFile(msg)
+
+	args := make(map[string]interface{})
+	if msg.Arguments != nil && (msg.Type == "request" || msg.Type == "") { // msg.Type can be empty for requests
+		if err := json.Unmarshal(msg.Arguments, &args); err != nil {
+			appendToFile(map[string]interface{}{"error": "parsing DAP arguments", "command": msg.Command, "detail": err.Error(), "raw_args": string(msg.Arguments)}, "")
+			fmt.Printf("DAP_HANDLE: Error parsing arguments (cmd: %s): %v. Raw: %s\n", msg.Command, err, string(msg.Arguments))
+			replyError(msg, map[string]interface{}{"message": "Failed to parse arguments"}, w, messageIdx)
+			return
+		}
+	}
+
+	switch msg.Command {
+	case "initialize":
+		appendToFile("HANDLER: initialize - Received.", "")
+		reply(msg, map[string]interface{}{
+			"supportsConfigurationDoneRequest": true, "supportsConditionalBreakpoints": true,
+			"supportsFunctionBreakpoints": false, "supportsSetVariable": true,
+			"supportsTerminateRequest": true, "supportsStackTraceRequest": true,
+		}, w, messageIdx)
+		sendEvent("initialized", nil, w, messageIdx)
+		appendToFile("HANDLER: initialize - Finished.", "")
+
+	case "launch":
+		appendToFile("HANDLER: launch - Received.", "")
+		progPathArg, okPath := args["program"].(string)
+		if !okPath {
+			appendToFile("HANDLER: launch - ERROR: 'program' argument missing or not string.", "")
+			replyError(msg, map[string]interface{}{"message": "Launch missing 'program' argument or invalid type."}, w, messageIdx)
+			return
+		}
+
+		absProgPath, errAbs := filepath.Abs(progPathArg)
+		if errAbs != nil {
+			appendToFile(fmt.Sprintf("HANDLER: launch - ERROR: Failed to get absolute path for '%s': %v", progPathArg, errAbs), "")
+			replyError(msg, map[string]interface{}{"message": fmt.Sprintf("Invalid program path: %s", progPathArg)}, w, messageIdx)
+			return
+		}
+		storage["programPath"] = absProgPath
+		appendToFile(fmt.Sprintf("HANDLER: launch - Absolute program path: %s", absProgPath), "")
+
+		soeArg, soeArgExists := args["stopOnEntry"]
+		if soeArgExists {
+			soeBool, okSOE := soeArg.(bool)
+			initialStopOnEntry = okSOE && soeBool
+		} else {
+			initialStopOnEntry = false
+		}
+		appendToFile(fmt.Sprintf("HANDLER: launch - initialStopOnEntry: %t", initialStopOnEntry), "")
+		dapInitiatedPause = false
+		isSteppingMutex.Lock()
+		isStepping = false
+		isSteppingMutex.Unlock()
+
+		appendToFile("HANDLER: launch - Locking programTerminatedMutex for channel init.", "")
+		programTerminatedMutex.Lock()
+		if programTerminated != nil {
+			appendToFile("HANDLER: launch - Old programTerminated channel exists, closing.", "")
+			select {
+			case <-programTerminated: // Drain if a value was sent but not received
+			default:
+			}
+			close(programTerminated)
+		}
+		programTerminated = make(chan bool, 1)
+		appendToFile(fmt.Sprintf("HANDLER: launch - New programTerminated channel created: %p", programTerminated), "")
+		if debuggerStatePollerDone != nil {
+			appendToFile("HANDLER: launch - Old debuggerStatePollerDone channel exists, closing.", "")
+			select {
+			case <-debuggerStatePollerDone: // Already closed
+			default:
+				close(debuggerStatePollerDone)
+			}
+			debuggerStatePollerDone = nil
+			appendToFile("HANDLER: launch - Old debuggerStatePollerDone channel closed and nilled.", "")
+		}
+		programTerminatedMutex.Unlock()
+		appendToFile("HANDLER: launch - Unlocked programTerminatedMutex.", "")
+
+		programContent, err := os.ReadFile(absProgPath)
+		if err != nil {
+			appendToFile(fmt.Sprintf("HANDLER: launch - ERROR reading program '%s': %v", absProgPath, err), "")
+			replyError(msg, map[string]interface{}{"message": fmt.Sprintf("Error reading program '%s': %s", absProgPath, err.Error())}, w, messageIdx)
+			return
+		}
+		appendToFile(fmt.Sprintf("HANDLER: launch - Read program content (%d bytes).", len(programContent)), "")
+
+		fileParser := parser.New(absProgPath)
+		parsedAst, perr := fileParser.ProduceAST(string(programContent))
+		if perr != nil {
+			appendToFile(fmt.Sprintf("HANDLER: launch - ERROR parsing program '%s': %v", absProgPath, perr), "")
+			replyError(msg, map[string]interface{}{"message": fmt.Sprintf("Error parsing program '%s': %s", absProgPath, perr.Error())}, w, messageIdx)
+			return
+		}
+		programAST = parsedAst
+		appendToFile("HANDLER: launch - Program parsed successfully.", "")
+
+		reply(msg, nil, w, messageIdx)
+
+		if initialStopOnEntry {
+			appendToFile("HANDLER: launch - stopOnEntry=true. Pausing debugger & sending 'stopped' (entry).", "")
+			if err := xShared.XelRootDebugger.Pause(); err != nil {
+				appendToFile(fmt.Sprintf("HANDLER: launch - Error pausing on entry: %v", err), "")
+			}
+			sendEvent("stopped", map[string]interface{}{
+				"reason": "entry", "threadId": 1, "text": "Paused at entry.", "allThreadsStopped": true,
+			}, w, messageIdx)
+		} else {
+			appendToFile("HANDLER: launch - stopOnEntry=false. Awaiting configurationDone.", "")
+		}
+		appendToFile("HANDLER: launch - Finished.", "")
+
+	case "setBreakpoints":
+		srcArg, srcOk := args["source"].(map[string]interface{})
+		if !srcOk {
+			replyError(msg, map[string]interface{}{"message": "Missing 'source' in setBreakpoints"}, w, messageIdx)
+			return
+		}
+		filePathArg, fileOk := srcArg["path"].(string)
+		if !fileOk {
+			replyError(msg, map[string]interface{}{"message": "Invalid source.path (not string)"}, w, messageIdx)
+			return
+		}
+
+		absFilePath, errAbsPath := filepath.Abs(filePathArg)
+		if errAbsPath != nil {
+			appendToFile(fmt.Sprintf("HANDLER: setBreakpoints - ERROR: Failed to get absolute path for '%s': %v", filePathArg, errAbsPath), "")
+			replyError(msg, map[string]interface{}{"message": fmt.Sprintf("Invalid source path in setBreakpoints: %s", filePathArg)}, w, messageIdx)
+			return
+		}
+		appendToFile(fmt.Sprintf("HANDLER: setBreakpoints for %s (abs: %s). Raw args: %+v", filePathArg, absFilePath, args), "")
+
+		actualBreakpointsSet := []map[string]interface{}{}
+		linesToSet := []int{}
+
+		if bpListIfc, ok := args["breakpoints"].([]interface{}); ok && len(bpListIfc) > 0 {
+			appendToFile(fmt.Sprintf("HANDLER: setBreakpoints - Processing 'breakpoints' array (len %d)", len(bpListIfc)), "")
+			for i, bpEntry := range bpListIfc {
+				if bpMap, okMap := bpEntry.(map[string]interface{}); okMap {
+					if lineVal, lineExists := bpMap["line"]; lineExists {
+						if lineFloat, lineIsFloat := lineVal.(float64); lineIsFloat {
+							linesToSet = append(linesToSet, int(lineFloat))
+							appendToFile(fmt.Sprintf("  BP %d: Added line %d from 'breakpoints' entry.", i, int(lineFloat)), "")
+						} else {
+							appendToFile(fmt.Sprintf("  BP %d: 'line' in 'breakpoints' is not float: %T", i, lineVal), "")
+						}
+					} else {
+						appendToFile(fmt.Sprintf("  BP %d: 'line' missing in 'breakpoints' entry.", i), "")
+					}
+				} else {
+					appendToFile(fmt.Sprintf("  BP %d: item in 'breakpoints' array not a map.", i), "")
+				}
+			}
+		} else if linesListIfc, ok := args["lines"].([]interface{}); ok && len(linesListIfc) > 0 {
+			appendToFile(fmt.Sprintf("HANDLER: setBreakpoints - Processing 'lines' array (len %d)", len(linesListIfc)), "")
+			for i, lineEntry := range linesListIfc {
+				if lineFloat, lineIsFloat := lineEntry.(float64); lineIsFloat {
+					linesToSet = append(linesToSet, int(lineFloat))
+					appendToFile(fmt.Sprintf("  Line %d: Added line %d from 'lines' entry.", i, int(lineFloat)), "")
+				} else {
+					appendToFile(fmt.Sprintf("  Line %d: item in 'lines' array is not a float: %T", i, lineEntry), "")
+				}
+			}
+		} else {
+			appendToFile(fmt.Sprintf("HANDLER: setBreakpoints - Neither 'breakpoints' nor 'lines' found with items for %s. Assuming clear all.", absFilePath), "")
+			// TODO: Implement xShared.XelRootDebugger.BreakpointManager.ClearFile(absFilePath)
+		}
+
+		appendToFile(fmt.Sprintf("HANDLER: setBreakpoints - (Conceptual) Cleared existing BPs for %s.", absFilePath), "")
+		for _, lineNum := range linesToSet {
+			appendToFile(fmt.Sprintf("HANDLER: setBreakpoints - Registering BP with BMgr at %s:%d", absFilePath, lineNum), "")
+			xShared.XelRootDebugger.BreakpointManager.Set(absFilePath, lineNum)
+			responseSource := map[string]interface{}{
+				"name": path.Base(absFilePath), // Display name is basename
+				"path": absFilePath,            // Actual path is absolute
+			}
+			actualBreakpointsSet = append(actualBreakpointsSet, map[string]interface{}{
+				"verified": true, "line": lineNum, "source": responseSource,
+			})
+		}
+		reply(msg, map[string]interface{}{"breakpoints": actualBreakpointsSet}, w, messageIdx)
+		appendToFile(fmt.Sprintf("HANDLER: setBreakpoints - Replied with %d 'verified' BPs for %s.", len(actualBreakpointsSet), absFilePath), "")
+
+	case "configurationDone":
+		appendToFile("HANDLER: configurationDone - Received.", "")
+		reply(msg, nil, w, messageIdx)
+		appendToFile("HANDLER: configurationDone - Replied to client.", "")
+
+		if programAST == nil {
+			appendToFile("HANDLER: configurationDone - ERROR: Program AST nil.", "")
+			sendEvent("output", map[string]interface{}{"category": "stderr", "output": "DAP Error: Program not loaded.\n"}, w, messageIdx)
+			return
+		}
+		appendToFile("HANDLER: configurationDone - AST is available.", "")
+
+		var initialDebuggerStateForPoller debugger.State
+		appendToFile("HANDLER: configurationDone - ABOUT TO CALL debugger.Continue().", "")
+		if errCont := xShared.XelRootDebugger.Continue(); errCont != nil {
+			appendToFile(fmt.Sprintf("HANDLER: configurationDone - Error on debugger.Continue(): %v", errCont), "")
+			sendEvent("output", map[string]interface{}{"category": "stderr", "output": fmt.Sprintf("Debugger continue error: %v\n", errCont)}, w, messageIdx)
+			initialDebuggerStateForPoller = xShared.XelRootDebugger.State // Capture state even on error
+		} else {
+			initialDebuggerStateForPoller = xShared.XelRootDebugger.State // Capture state AFTER Continue
+			appendToFile(fmt.Sprintf("HANDLER: configurationDone - debugger.Continue() CALL COMPLETED. Debugger state for poller init: %s", initialDebuggerStateForPoller), "")
+		}
+
+		var pollerNeedsStarting bool = false
+		appendToFile("HANDLER: configurationDone - Locking programTerminatedMutex for poller check.", "")
+		programTerminatedMutex.Lock()
+		appendToFile("HANDLER: configurationDone - Locked programTerminatedMutex.", "")
+		if debuggerStatePollerDone == nil {
+			appendToFile("HANDLER: configurationDone - Poller needs starting.", "")
+			pollerNeedsStarting = true
+			debuggerStatePollerDone = make(chan struct{})
+			if programTerminated == nil { // Should have been created in launch
+				appendToFile("HANDLER: configurationDone - WARNING: programTerminated was nil, re-init.", "")
+				programTerminated = make(chan bool, 1)
+			}
+		}
+		currentPollerDoneChan := debuggerStatePollerDone
+		currentTermChan := programTerminated
+		appendToFile(fmt.Sprintf("HANDLER: configurationDone - Captured pollerDone: %p, termChan: %p", currentPollerDoneChan, currentTermChan), "")
+		programTerminatedMutex.Unlock()
+		appendToFile("HANDLER: configurationDone - Unlocked programTerminatedMutex.", "")
+
+		if pollerNeedsStarting {
+			appendToFile(fmt.Sprintf("HANDLER: configurationDone - Starting poller goroutine with initial state hint: %s.", initialDebuggerStateForPoller), "")
+			go func(pollerDone chan struct{}, termChan chan bool, pollerInitialOldState debugger.State) {
+				appendToFile(fmt.Sprintf("POLLER: Goroutine started. PollerDone: %p, TermChan: %p", pollerDone, termChan), "")
+				oldState := pollerInitialOldState // Use the state captured *after* Continue()
+				appendToFile(fmt.Sprintf("POLLER: Initialized with oldState: %s.", oldState), "")
+
+				time.Sleep(20 * time.Millisecond) // Give evaluator a small window to hit an immediate breakpoint
+
+				ticker := time.NewTicker(50 * time.Millisecond)
+				defer ticker.Stop()
+				for {
+					select {
+					case <-pollerDone:
+						appendToFile("POLLER: Stopping (pollerDone closed).", "")
+						return
+					case termSignal, ok := <-termChan:
+						appendToFile(fmt.Sprintf("POLLER: Received from termChan (ok:%t, signal:%t)", ok, termSignal), "")
+						if !ok {
+							appendToFile("POLLER: termChan closed externally.", "")
+							return
+						}
+						if termSignal {
+							sendEvent("terminated", nil, w, messageIdx)
+							programTerminatedMutex.Lock()
+							if debuggerStatePollerDone == pollerDone { // Check if it's still our current channel
+								select {
+								case <-debuggerStatePollerDone: // Already closed
+								default:
+									close(debuggerStatePollerDone)
+								}
+								debuggerStatePollerDone = nil
+							}
+							programTerminatedMutex.Unlock()
+							return
+						}
+					case <-ticker.C:
+						currentState := xShared.XelRootDebugger.State
+						if currentState != oldState {
+							appendToFile(fmt.Sprintf("POLLER: State changed! Old: %s -> New: %s", oldState, currentState), "")
+							eventBody := map[string]interface{}{"threadId": 1, "allThreadsStopped": true}
+							var eventName string
+							switch currentState {
+							case debugger.PausedState:
+								eventName = "stopped"
+								reason := "breakpoint" // Default
+								isSteppingMutex.Lock()
+								localIsStepping := isStepping
+								isSteppingMutex.Unlock()
+
+								if dapInitiatedPause {
+									reason = "pause"
+								} else if localIsStepping { // Check our DAP stepping flag
+									reason = "step"
+								}
+								// 'entry' reason is sent from launch handler if initialStopOnEntry is true.
+								eventBody["reason"] = reason
+								appendToFile(fmt.Sprintf("POLLER: Sending 'stopped' event with reason '%s'", reason), "")
+							case debugger.RunningState:
+								eventName = "continued"
+								dapInitiatedPause = false
+								isSteppingMutex.Lock()
+								isStepping = false
+								isSteppingMutex.Unlock() // Reset step flag if we became running
+								appendToFile("POLLER: State is Running. dapInitiatedPause=false, isStepping=false.", "")
+							case debugger.SteppingState:
+								// No event for "SteppingState" itself.
+								// The debugger is actively stepping. We wait for it to become "PausedState".
+								// isStepping flag is already true from the step command handler.
+								appendToFile(fmt.Sprintf("POLLER: Saw SteppingState. isStepping=%t.", isStepping), "")
+							}
+							if eventName != "" {
+								sendEvent(eventName, eventBody, w, messageIdx)
+							}
+							oldState = currentState // IMPORTANT: Update oldState
+						}
+					}
+				}
+			}(currentPollerDoneChan, currentTermChan, initialDebuggerStateForPoller)
+		} else {
+			appendToFile("HANDLER: configurationDone - Poller already existed.", "")
+		}
+
+		appendToFile("HANDLER: configurationDone - Launching evaluator goroutine.", "")
+		go func(currentAST *ast.Program, termChanForEval chan bool) {
+			progPth := "unknown_path"
+			if storage != nil {
+				if p, ok := storage["programPath"].(string); ok {
+					progPth = p
+				} else {
+					appendToFile("EVALUATOR: WARNING - programPath not in storage or not string.", "")
+				}
+			} else {
+				appendToFile("EVALUATOR: WARNING - storage map is nil.", "")
+			}
+			appendToFile(fmt.Sprintf("EVALUATOR: Goroutine REALLY Starting for %s. TermChan: %p", progPth, termChanForEval), "")
+
+			debuggerEnv := xShared.XelRootDebugger.Environment
+			if debuggerEnv == nil {
+				appendToFile("EVALUATOR: CRITICAL ERROR - xShared.XelRootDebugger.Environment is nil!", "")
+				programTerminatedMutex.Lock()
+				if termChanForEval != nil {
+					select {
+					case termChanForEval <- true:
+					default:
+					}
+				}
+				programTerminatedMutex.Unlock()
+				return
+			}
+			appendToFile(fmt.Sprintf("EVALUATOR: Environment to be used: %p", debuggerEnv), "")
+
+			evalErr := evaluateProgramStmts(currentAST, debuggerEnv, xShared.XelRootDebugger)
+
+			logMsg := fmt.Sprintf("EVALUATOR: Finished for %s.", progPth)
+			if evalErr != nil {
+				logMsg = fmt.Sprintf("EVALUATOR: Finished for %s with error: %v", progPth, evalErr)
+				sendEvent("output", map[string]interface{}{"category": "stderr", "output": fmt.Sprintf("Runtime Error: %s\n", evalErr.Error())}, w, messageIdx)
+			}
+			appendToFile(logMsg, "")
+
+			appendToFile(fmt.Sprintf("EVALUATOR: Attempting to lock programTerminatedMutex for %s.", progPth), "")
+			programTerminatedMutex.Lock()
+			appendToFile(fmt.Sprintf("EVALUATOR: Locked programTerminatedMutex for %s.", progPth), "")
+			if termChanForEval != nil {
+				select {
+				case termChanForEval <- true:
+					appendToFile(fmt.Sprintf("EVALUATOR: Sent programTerminated signal for %s.", progPth), "")
+				default:
+					appendToFile(fmt.Sprintf("EVALUATOR: programTerminated channel full/closed for %s.", progPth), "")
+				}
+			} else {
+				appendToFile(fmt.Sprintf("EVALUATOR: termChanForEval was nil for %s.", progPth), "")
+			}
+			programTerminatedMutex.Unlock()
+			appendToFile(fmt.Sprintf("EVALUATOR: Unlocked programTerminatedMutex for %s.", progPth), "")
+		}(programAST, currentTermChan)
+
+		appendToFile("HANDLER: configurationDone - Finished processing logic.", "")
+
+	case "threads":
+		appendToFile("HANDLER: threads - Received.", "")
+		reply(msg, map[string]interface{}{"threads": []map[string]interface{}{{"id": 1, "name": "main-thread"}}}, w, messageIdx)
+		appendToFile("HANDLER: threads - Finished.", "")
+
+	case "stackTrace":
+		appendToFile("HANDLER: stackTrace - Received.", "")
+		threadIdArg, _ := args["threadId"].(float64)
+		appendToFile(fmt.Sprintf("HANDLER: stackTrace for threadId: %.0f. Debugger state: %s", threadIdArg, xShared.XelRootDebugger.State), "")
+		dapFrames := []map[string]interface{}{}
+		totalFrames := 0
+		if xShared.XelRootDebugger.State == debugger.PausedState {
+			frameIDCounter := 0
+			currentFile := xShared.XelRootDebugger.CurrentFile
+			currentLine := xShared.XelRootDebugger.CurrentLine
+			if currentFile != "" && currentLine > 0 {
+				absCurrentFile, _ := filepath.Abs(currentFile)
+				dapFrames = append(dapFrames, map[string]interface{}{"id": frameIDCounter, "name": "[current]", "source": map[string]interface{}{"name": path.Base(absCurrentFile), "path": absCurrentFile}, "line": currentLine, "column": 1})
+				appendToFile(fmt.Sprintf("  stackTrace: Added top frame #%d: %s:%d", frameIDCounter, absCurrentFile, currentLine), "")
+				frameIDCounter++
+			}
+			callStack := xShared.XelRootDebugger.CallStack
+			appendToFile(fmt.Sprintf("HANDLER: stackTrace - Internal CallStack length: %d", len(callStack)), "")
+			for i, internalFrame := range callStack {
+				if internalFrame.Filename == "" || internalFrame.Line <= 0 {
+					continue
+				}
+				absInternalFrameFilename, _ := filepath.Abs(internalFrame.Filename)
+				isDuplicateOfTop := false
+				if len(dapFrames) > 0 && dapFrames[0]["source"] != nil {
+					srcMap := dapFrames[0]["source"].(map[string]interface{})
+					if srcMap["path"] == absInternalFrameFilename && dapFrames[0]["line"] == internalFrame.Line {
+						if dapFrames[0]["name"] == "[current]" {
+							dapFrames[0]["name"] = internalFrame.Name
+						}
+						isDuplicateOfTop = true
+					}
+				}
+				if isDuplicateOfTop && i == 0 {
+					appendToFile(fmt.Sprintf("  stackTrace: CallStack item %d matches CurrentFile/Line.", i), "")
+					continue
+				}
+				dapFrames = append(dapFrames, map[string]interface{}{"id": frameIDCounter, "name": internalFrame.Name, "source": map[string]interface{}{"name": path.Base(absInternalFrameFilename), "path": absInternalFrameFilename}, "line": internalFrame.Line, "column": 1})
+				appendToFile(fmt.Sprintf("  stackTrace: Added frame #%d: %s at %s:%d", frameIDCounter, internalFrame.Name, absInternalFrameFilename, internalFrame.Line), "")
+				frameIDCounter++
+			}
+			totalFrames = len(dapFrames)
+		} else {
+			appendToFile(fmt.Sprintf("HANDLER: stackTrace - Debugger not Paused (State: %s). Empty stack.", xShared.XelRootDebugger.State), "")
+		}
+		reply(msg, map[string]interface{}{"stackFrames": dapFrames, "totalFrames": totalFrames}, w, messageIdx)
+		appendToFile("HANDLER: stackTrace - Finished.", "")
+
+	case "pause":
+		appendToFile(fmt.Sprintf("HANDLER: pause - Received. State before: %s", xShared.XelRootDebugger.State), "")
+		if err := xShared.XelRootDebugger.Pause(); err != nil {
+			appendToFile(fmt.Sprintf("HANDLER: pause - Error: %v", err), "")
+		}
+		dapInitiatedPause = true
+		isSteppingMutex.Lock()
+		isStepping = false
+		isSteppingMutex.Unlock() // Explicit pause overrides stepping
+		appendToFile(fmt.Sprintf("HANDLER: pause - State after: %s. dapInitiatedPause: %t", xShared.XelRootDebugger.State, dapInitiatedPause), "")
+		reply(msg, nil, w, messageIdx)
+		appendToFile("HANDLER: pause - Finished.", "")
+
+	case "continue":
+		appendToFile(fmt.Sprintf("HANDLER: continue - Received. State before: %s", xShared.XelRootDebugger.State), "")
+		dapInitiatedPause = false
+		isSteppingMutex.Lock()
+		isStepping = false
+		isSteppingMutex.Unlock()
+		if err := xShared.XelRootDebugger.Continue(); err != nil {
+			appendToFile(fmt.Sprintf("HANDLER: continue - Error: %v", err), "")
+		}
+		appendToFile(fmt.Sprintf("HANDLER: continue - State after: %s", xShared.XelRootDebugger.State), "")
+		reply(msg, map[string]interface{}{"allThreadsContinued": true}, w, messageIdx)
+		appendToFile("HANDLER: continue - Finished.", "")
+
+	case "next", "stepIn", "stepOut":
+		appendToFile(fmt.Sprintf("HANDLER: %s - Received. State before: %s", msg.Command, xShared.XelRootDebugger.State), "")
+		dapInitiatedPause = false
+		isSteppingMutex.Lock()
+		isStepping = true
+		isSteppingMutex.Unlock()
+
+		var stepErr error
+		switch msg.Command {
+		case "next":
+			stepErr = xShared.XelRootDebugger.StepOver()
+		case "stepIn":
+			stepErr = xShared.XelRootDebugger.StepInto()
+		case "stepOut":
+			stepErr = xShared.XelRootDebugger.StepOut()
+		}
+		if stepErr != nil {
+			appendToFile(fmt.Sprintf("HANDLER: %s - Error: %v", msg.Command, stepErr), "")
+		}
+		// The debugger.StepX methods should change state to SteppingState and unblock WaitIfPaused.
+		// WaitIfPaused will then execute one step and transition to PausedState.
+		appendToFile(fmt.Sprintf("HANDLER: %s - State after %s() call: %s. isStepping: %t", msg.Command, msg.Command, xShared.XelRootDebugger.State, isStepping), "")
+		reply(msg, nil, w, messageIdx)
+		appendToFile(fmt.Sprintf("HANDLER: %s - Finished.", msg.Command), "")
+
+	case "disconnect":
+		appendToFile("HANDLER: disconnect - Received.", "")
+		programTerminatedMutex.Lock()
+		if programTerminated != nil {
+			select {
+			case programTerminated <- true:
+				appendToFile("HANDLER: disconnect - Signaled programTerminated.", "")
+			default:
+				appendToFile("HANDLER: disconnect - programTerminated chan full/closed.", "")
+			}
+		}
+		if debuggerStatePollerDone != nil {
+			select {
+			case <-debuggerStatePollerDone:
+			default:
+				close(debuggerStatePollerDone)
+			}
+			debuggerStatePollerDone = nil
+		}
+		programTerminatedMutex.Unlock()
+		if err := xShared.XelRootDebugger.Pause(); err != nil {
+			appendToFile(fmt.Sprintf("HANDLER: disconnect - Error pausing: %v", err), "")
+		}
+		programAST = nil
+		dapInitiatedPause = false
+		initialStopOnEntry = false
+		isSteppingMutex.Lock()
+		isStepping = false
+		isSteppingMutex.Unlock()
+		reply(msg, nil, w, messageIdx)
+		appendToFile("HANDLER: disconnect - Finished.", "")
+
+	default:
+		appendToFile(fmt.Sprintf("HANDLER: Unhandled DAP command: %s", msg.Command), "")
+		replyError(msg, map[string]interface{}{"message": fmt.Sprintf("Command '%s' not supported.", msg.Command)}, w, messageIdx)
+	}
+	appendToFile(fmt.Sprintf("HANDLER: Finished handling command: %s overall.", msg.Command), "")
+}
+
+func evaluateProgramStmts(program *ast.Program, currentEnv *environment.Environment, dbgr *debugger.Debugger) error {
+	appendToFile("EVALUATOR_HELPER: evaluateProgramStmts - Entered.", "")
+	if program == nil {
+		appendToFile("EVALUATOR_HELPER: programAST is nil.", "")
+		return fmt.Errorf("program AST is nil")
+	}
+	if program.Stmts == nil {
+		appendToFile("EVALUATOR_HELPER: programAST.Stmts is nil.", "")
+		return nil
+	}
+	appendToFile(fmt.Sprintf("EVALUATOR_HELPER: Found %d statements.", len(program.Stmts)), "")
+	for i, stmt := range program.Stmts {
+		if stmt == nil {
+			appendToFile(fmt.Sprintf("EVALUATOR_HELPER: stmt %d/%d is nil. Skipping.", i+1, len(program.Stmts)), "")
+			continue
+		}
+		stmtMeta := stmt.GetSourceMetadata()
+		logMsg := ""
+		absStmtFilename := stmtMeta.Filename
+		if stmtMeta.Filename != "" && stmtMeta.StartLine > 0 {
+			var err error
+			absStmtFilename, err = filepath.Abs(stmtMeta.Filename)
+			if err != nil {
+				appendToFile(fmt.Sprintf("EVALUATOR_HELPER: Error abs path for '%s': %v", stmtMeta.Filename, err), "")
+				dbgr.CurrentFile = stmtMeta.Filename
+			} else {
+				dbgr.CurrentFile = absStmtFilename
+			}
+			dbgr.CurrentLine = stmtMeta.StartLine
+			logMsg = fmt.Sprintf("EVALUATOR_HELPER: Prepping stmt %d/%d (Type: %s, %s:%d)", i+1, len(program.Stmts), stmt.GetType(), dbgr.CurrentFile, dbgr.CurrentLine)
+		} else {
+			logMsg = fmt.Sprintf("EVALUATOR_HELPER: Prepping stmt %d/%d (Type: %s, No SourceMeta)", i+1, len(program.Stmts), stmt.GetType())
+		}
+		appendToFile(logMsg, "")
+		_, stmtErr := evaluator.Evaluate(stmt, currentEnv, dbgr)
+		if stmtErr != nil {
+			appendToFile(fmt.Sprintf("EVALUATOR_HELPER: Error on stmt %d (Type: %s): %v", i+1, stmt.GetType(), stmtErr), "")
+			return stmtErr
+		}
+	}
+	appendToFile("EVALUATOR_HELPER: Finished all statements.", "")
+	return nil
+}
+
+func replyError(req DAPMessage, errorBodyDetails map[string]interface{}, w io.Writer, messageIdx *int) {
+	*messageIdx++
+	resp := DAPResponse{
+		Seq: *messageIdx, Type: "response", RequestSeq: req.Seq, Command: req.Command, Success: false,
+		Message: errorBodyDetails["message"].(string),
+		Body:    map[string]interface{}{"error": errorBodyDetails},
+	}
+	sendDAPMessage(resp, w, "ERROR RESPONSE")
+}
+
+func reply(req DAPMessage, body interface{}, w io.Writer, messageIdx *int) {
+	*messageIdx++
+	resp := DAPResponse{
+		Seq: *messageIdx, Type: "response", RequestSeq: req.Seq, Command: req.Command, Success: true, Body: body,
+	}
+	sendDAPMessage(resp, w, "RESPONSE")
+}
+
+func sendEvent(event string, body interface{}, w io.Writer, messageIdx *int) {
+	*messageIdx++
+	eventMsg := map[string]interface{}{"type": "event", "seq": *messageIdx, "event": event}
+	if body != nil {
+		eventMsg["body"] = body
+	}
+	sendDAPMessage(eventMsg, w, fmt.Sprintf("EVENT (%s)", event))
+}
+
+func sendDAPMessage(msg interface{}, w io.Writer, msgContext string) {
+	logData := map[string]interface{}{
+		"direction": fmt.Sprintf("OUTGOING %s → CLIENT", msgContext),
+		"timestamp": time.Now().Format(time.RFC3339Nano),
+		"message":   msg,
+	}
+	appendToFile(logData, "")
+	data, err := json.Marshal(msg)
+	if err != nil {
+		errorLog := map[string]interface{}{"error_context": "Marshalling DAP for sending", "error": err.Error(), "message_type": msgContext, "original_msg_repr": fmt.Sprintf("%+v", msg)}
+		appendToFile(errorLog, "")
+		fmt.Printf("DAP_SEND: Marshalling Error for sending: %s - %v\n", msgContext, err)
+		return
+	}
+	header := fmt.Sprintf("Content-Length: %d\r\n\r\n", len(data))
+	if _, err := io.WriteString(w, header); err != nil {
+		appendToFile(map[string]interface{}{"error": "writing DAP header", "detail": err.Error(), "context": msgContext}, "")
+		return
+	}
+	if _, err := w.Write(data); err != nil {
+		appendToFile(map[string]interface{}{"error": "writing DAP data", "detail": err.Error(), "context": msgContext}, "")
+		return
+	}
+	if flusher, ok := w.(interface{ Flush() error }); ok {
+		if err := flusher.Flush(); err != nil {
+			appendToFile(map[string]interface{}{"error": "flushing DAP writer", "detail": err.Error(), "context": msgContext}, "")
+		}
+	}
+}
+
+const specialClearKeywordForLog = "ACTUALLY_CLEAR_THE_LOG_FILE_PLEASE_ON_INIT"
+
+func appendToFile(data interface{}, clearInstruction string) {
+	logFilePath := "/home/kas/Documents/Projects/xel/dap.log"
+	if clearInstruction == specialClearKeywordForLog {
+		if err := os.Truncate(logFilePath, 0); err != nil {
+			fmt.Printf("CRITICAL: Error truncating log %s: %v\n", logFilePath, err)
+		}
+		f, err := os.OpenFile(logFilePath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+		if err == nil {
+			fmt.Fprintf(f, "[%s] Log file cleared.\n---\n", time.Now().Format(time.RFC3339Nano))
+			f.Close()
+		} else {
+			fmt.Printf("CRITICAL: Error opening log %s after truncate: %v\n", logFilePath, err)
+		}
+		return
+	}
+	var logLine string
+	if strData, ok := data.(string); ok {
+		logLine = fmt.Sprintf("[%s] %s\n---\n", time.Now().Format(time.RFC3339Nano), strData)
+	} else {
+		jsonData, err := json.MarshalIndent(data, "", "  ")
+		if err == nil {
+			logLine = fmt.Sprintf("\n%s\n---\n", string(jsonData))
+		} else {
+			logLine = fmt.Sprintf("[%s] (Unloggable Data, Marshal Err: %v) Original: %+v\n---\n", time.Now().Format(time.RFC3339Nano), err, data)
+		}
+	}
+	f, errOpen := os.OpenFile(logFilePath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	if errOpen != nil {
+		fmt.Printf("Error opening log for append: %v. Data: %s\n", errOpen, data)
+		return
+	}
+	defer f.Close()
+	if _, errWrite := f.WriteString(logLine); errWrite != nil {
+		fmt.Printf("Error writing to log: %v. Data: %s\n", errWrite, data)
+	}
+}
+
+func init() {
+	appendToFile(nil, specialClearKeywordForLog)
+	appendToFile("DAP Server Initialized (Full Code, Abs Paths, BP Fix, Env Fix, Stepping Attempt).", "")
+}
