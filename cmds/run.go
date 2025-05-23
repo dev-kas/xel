@@ -1,7 +1,6 @@
 package cmds
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -56,21 +55,15 @@ func RunCommand() *cli.Command {
 				return err
 			}
 
-			manifest := xShared.ProjectManifest{}
-
 			// Check for xel.json in project directory
-			manifestPath := filepath.Join(filepath.Dir(filename), "xel.json")
-			if _, err := os.Stat(manifestPath); err == nil {
-				// Parse manifest
-				manifestContent, err := os.ReadFile(manifestPath)
-				if err != nil {
-					return fmt.Errorf("failed to read xel.json: %v", err)
+			manifest, _, err := helpers.FetchManifest(filepath.Dir(filename), filepath.Dir(filename))
+			if err != nil {
+				// Ignore error if manifest is not found
+				if err.Error() != "cannot find manifest" {
+					return err
 				}
-
-				if err := json.Unmarshal(manifestContent, &manifest); err != nil {
-					return fmt.Errorf("failed to parse xel.json: %v", err)
-				}
-
+			}
+			if manifest != nil {
 				// Check Xel version constraint if specified
 				if manifest.Xel != "" {
 					// Skip version check in development mode (when version is empty)
@@ -115,6 +108,13 @@ func RunCommand() *cli.Command {
 								xShared.EngineVersion, manifest.Engine)
 						}
 					}
+				}
+			} else {
+				// No manifest found, use default values
+				manifest = &xShared.ProjectManifest{
+					Name:    "Unknown",
+					Version: "0.0.0",
+					Deps:    map[string]string{},
 				}
 			}
 

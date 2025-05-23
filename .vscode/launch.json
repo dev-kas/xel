@@ -11,7 +11,7 @@
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}",
-            "args": ["debug", "example/bugbounty/simple.xel"],
+            "args": ["run", "example/launchpad/main.xel"],
             "console": "integratedTerminal"
         }
     ]
