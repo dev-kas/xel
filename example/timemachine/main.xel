@@ -1,0 +1,21 @@
+const time = import("xel:time")
+const format = "Mon, Jan 2 2006, 3:04 PM"
+
+const timer = time.Timer()
+timer.start()
+
+fn convert(timeStr, formatStr) {
+	let t = time.parse(timeStr, formatStr)
+	return time.format(t, format)
+}
+
+while (true) {
+	timer.stop()
+	let t = time.now()
+	print(time.format(t, format), t)
+	print(convert(time.format(t, "2006-01-02T15:04:05Z07:00"), "2006-01-02T15:04:05Z07:00"))
+	print("elapsed", timer.elapsed())
+	timer.start()
+    
+	time.sleep(100)
+}
