@@ -1,82 +1,47 @@
 package time
 
 import (
-	xShared "xel/shared"
+	"time"
 
 	"github.com/dev-kas/virtlang-go/v3/environment"
-	"github.com/dev-kas/virtlang-go/v3/evaluator"
-	"github.com/dev-kas/virtlang-go/v3/parser"
+	"github.com/dev-kas/virtlang-go/v3/errors"
 	"github.com/dev-kas/virtlang-go/v3/shared"
 	"github.com/dev-kas/virtlang-go/v3/values"
 )
 
-// Cache, or otherwise stack overflow
-var timerGenerator_ *shared.RuntimeValue
+var timer = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environment.Environment) (*shared.RuntimeValue, *errors.RuntimeError) {
+	var startedAt time.Time
+	var elapsed time.Duration
+	var running bool
 
-func timerGenerator() *shared.RuntimeValue {
-	if timerGenerator_ != nil {
-		return timerGenerator_
-	}
+	var nilVal = values.MK_NIL()
 
-	nilVal := values.MK_NIL()
-	timerGenerator_ = &nilVal
-
-	code := `
-	const time = import("xel:time")
-	class Timer {
-		private startedAt
-		private elapsed_ = 0
-		private running = false
-
-		public constructor() {}
-
-		public start() {
-			if (running) {
-				return nil
-			}
-			startedAt = time.now()
+	start_impl := values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environment.Environment) (*shared.RuntimeValue, *errors.RuntimeError) {
+		if !running {
+			startedAt = time.Now()
 			running = true
 		}
-
-		public stop() {
-			if (running) {
-				elapsed_ = elapsed_ + (time.now() - startedAt)
-				running = false
-			}
+		return &nilVal, nil
+	})
+	stop_impl := values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environment.Environment) (*shared.RuntimeValue, *errors.RuntimeError) {
+		if running {
+			elapsed += time.Since(startedAt)
+			running = false
 		}
-
-		public reset() {
-			elapsed_ = 0
-			startedAt = time.now()
+		return &nilVal, nil
+	})
+	elapsed_impl := values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environment.Environment) (*shared.RuntimeValue, *errors.RuntimeError) {
+		total := elapsed
+		if running {
+			total += time.Since(startedAt)
 		}
-
-		public elapsed() {
-			if (running) {
-				return elapsed_ + (time.now() - startedAt)
-			}
-			return elapsed_
-		}
-	}
-
-	// Export the class
-	Timer
-	`
-
-	p := parser.New("xel-internal:/time/timer")
-
-	ast, perr := p.ProduceAST(code)
-	if perr != nil {
-		xShared.ColorPalette.Warning.Println("Failed to produce AST for timer generator: " + perr.Error())
-		return &nilVal
-	}
-
-	env := environment.NewEnvironment(&xShared.XelRootEnv)
-	output, eerr := evaluator.Evaluate(ast, &env, nil)
-	if eerr != nil {
-		xShared.ColorPalette.Warning.Println("Failed to evaluate timer generator: " + eerr.Error())
-		return &nilVal
-	}
-
-	timerGenerator_ = output
-	return output
-}
+		retVal := values.MK_NUMBER(float64(total.Nanoseconds() / 1e6))
+		return &retVal, nil
+	})
+	retVal := values.MK_OBJECT(map[string]*shared.RuntimeValue{
+		"start": &start_impl,
+		"stop": &stop_impl,
+		"elapsed": &elapsed_impl,
+	})
+	return &retVal, nil
+})

@@ -14,7 +14,7 @@ func module() (*shared.RuntimeValue, *errors.RuntimeError) {
 		"sleep":    &sleep,
 		"format":   &format,
 		"parse":    &parse,
-		"Timer":    timerGenerator(),
+		"timer":    &timer,
 	})
 
 	return &mod, nil
