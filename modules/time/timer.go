@@ -38,10 +38,15 @@ var timer = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environmen
 		retVal := values.MK_NUMBER(float64(total.Nanoseconds() / 1e6))
 		return &retVal, nil
 	})
+	reset_impl := values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environment.Environment) (*shared.RuntimeValue, *errors.RuntimeError) {
+		elapsed = 0
+		return &nilVal, nil
+	})
 	retVal := values.MK_OBJECT(map[string]*shared.RuntimeValue{
 		"start": &start_impl,
 		"stop": &stop_impl,
 		"elapsed": &elapsed_impl,
+		"reset": &reset_impl,
 	})
 	return &retVal, nil
 })
