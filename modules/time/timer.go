@@ -43,10 +43,10 @@ var timer = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environmen
 		return &nilVal, nil
 	})
 	retVal := values.MK_OBJECT(map[string]*shared.RuntimeValue{
-		"start": &start_impl,
-		"stop": &stop_impl,
+		"start":   &start_impl,
+		"stop":    &stop_impl,
 		"elapsed": &elapsed_impl,
-		"reset": &reset_impl,
+		"reset":   &reset_impl,
 	})
 	return &retVal, nil
 })

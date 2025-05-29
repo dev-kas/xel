@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 
@@ -99,7 +100,7 @@ func main() {
 					p := parser.New("<REPL>")
 					program, err := p.ProduceAST(line)
 					if err != nil {
-						shared.ColorPalette.Error.Printf("Error: %s", err.Error())
+						shared.ColorPalette.Error.Printf("Error: %s\n", err.Error())
 						continue
 					}
 
@@ -108,13 +109,25 @@ func main() {
 						stackTrace := shared.XelRootDebugger.Snapshots[0]
 						stackTraceStr := helpers.GenerateStackTrace(stackTrace.Stack, "")
 						shared.ColorPalette.Error.Println(stackTraceStr)
-						shared.ColorPalette.Error.Printf("Error: %s", oerr.Error())
+						shared.ColorPalette.Error.Printf("Error: %s\n", oerr.Error())
 						shared.XelRootDebugger.Snapshots = nil
 
 						continue
 					}
 					if output != nil {
-						shared.ColorPalette.GrayMessage.Println(fmt.Sprintf("< %v", helpers.Stringify(*output, true)))
+						outputStr := helpers.Stringify(*output, true)
+						lines := strings.Split(outputStr, "\n")
+						for i, line := range lines {
+							if i == 0 {
+								shared.ColorPalette.GrayMessage.Printf("< %s", line)
+							} else {
+								shared.ColorPalette.GrayMessage.Printf("  %s", line)
+							}
+							if i < len(lines)-1 {
+								fmt.Println()
+							}
+						}
+						fmt.Println()
 					}
 				}
 			}

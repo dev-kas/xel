@@ -10,7 +10,7 @@ import (
 
 const (
 	maxLineLength = 80
-	itemsPerLine = 12
+	itemsPerLine  = 12
 )
 
 func Stringify(value shared.RuntimeValue, internal bool) string {
@@ -84,12 +84,12 @@ func formatArray(arr []shared.RuntimeValue, internal bool, visited map[uintptr]b
 			if end > len(arr) {
 				end = len(arr)
 			}
-			
+
 			var lineItems []string
 			for j := i; j < end; j++ {
 				lineItems = append(lineItems, stringifyWithVisited(arr[j], internal, visited, 0))
 			}
-			
+
 			line := nextIndent + strings.Join(lineItems, ", ")
 			if i+itemsPerLine < len(arr) {
 				line += ","

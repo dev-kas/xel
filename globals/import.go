@@ -60,8 +60,8 @@ var Import = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environme
 	// The import specifier must be a string literal
 	if args[0].Type != shared.String {
 		return nil, &errors.RuntimeError{
-			Message: fmt.Sprintf("`import` expects a string argument, but received %s (%s)", 
-				helpers.Stringify(args[0], false), 
+			Message: fmt.Sprintf("`import` expects a string argument, but received %s (%s)",
+				helpers.Stringify(args[0], false),
 				shared.Stringify(args[0].Type)),
 		}
 	}
@@ -79,7 +79,7 @@ var Import = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environme
 
 	// Construct the default module path with .xel extension
 	libpath := fmt.Sprintf("%s.xel", libname)
-	
+
 	// Flag to control module caching behavior
 	// Can be modified to force reload in development
 	useCache := true
@@ -94,7 +94,7 @@ var Import = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environme
 		// Handle local file import (relative to current file)
 		// Get the directory of the current file from the debugger context
 		dirname := filepath.Dir(xShared.XelRootDebugger.CurrentFile)
-		
+
 		// Resolve the full path to the target module
 		libpath = filepath.Join(dirname, libpath)
 	} else {
@@ -114,8 +114,8 @@ var Import = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environme
 		// Ensure proc is an object as expected
 		if processRuntimeVal.Type != shared.Object {
 			return nil, &errors.RuntimeError{
-				Message: fmt.Sprintf("Expected 'proc' to be an object, but got %s (%s)", 
-					helpers.Stringify(*processRuntimeVal, false), 
+				Message: fmt.Sprintf("Expected 'proc' to be an object, but got %s (%s)",
+					helpers.Stringify(*processRuntimeVal, false),
 					shared.Stringify(processRuntimeVal.Type)),
 			}
 		}
@@ -132,15 +132,15 @@ var Import = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environme
 		// Ensure the manifest is an object with the expected structure
 		if manifestRuntimeVal.Type != shared.Object {
 			return nil, &errors.RuntimeError{
-				Message: fmt.Sprintf("Expected manifest to be an object, but got %s (%s)", 
-					helpers.Stringify(*manifestRuntimeVal, false), 
+				Message: fmt.Sprintf("Expected manifest to be an object, but got %s (%s)",
+					helpers.Stringify(*manifestRuntimeVal, false),
 					shared.Stringify(manifestRuntimeVal.Type)),
 			}
 		}
 
 		// Extract the manifest object and its dependencies
 		manifest := manifestRuntimeVal.Value.(map[string]*shared.RuntimeValue)
-		
+
 		// Get the dependencies map from the manifest
 		depsVal, depsExists := manifest["deps"]
 		if !depsExists || depsVal.Type != shared.Object {
@@ -166,7 +166,7 @@ var Import = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environme
 		pkgManifestPath, pkgManifest, resolutionErr := helpers.ResolveModule(libname, constraint)
 		if resolutionErr != nil {
 			return nil, &errors.RuntimeError{
-				Message: fmt.Sprintf("Failed to resolve package '%s' (constraint: %s): %v", 
+				Message: fmt.Sprintf("Failed to resolve package '%s' (constraint: %s): %v",
 					libname, constraint, resolutionErr),
 			}
 		}
@@ -174,7 +174,7 @@ var Import = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environme
 		// Convert the resolved package manifest into a runtime-compatible format
 		// This ensures the imported module has access to the correct manifest information
 		manifestConverted := map[string]*shared.RuntimeValue{}
-		
+
 		// Helper to store string values in the manifest
 		addStringField := func(key, value string) {
 			val := stringToRuntimeValue(value)
@@ -202,7 +202,7 @@ var Import = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environme
 
 		// Create a deep copy of the process object to avoid modifying the original
 		modifiedProc := helpers.DeepCopyObject(processRuntimeVal.Value.(map[string]*shared.RuntimeValue))
-		
+
 		// Create a new manifest value with the converted package manifest
 		manifestVal := values.MK_OBJECT(manifestConverted)
 		modifiedProc["manifest"] = &manifestVal
@@ -279,12 +279,12 @@ func evaluateModule(libpath string, env *environment.Environment) (*shared.Runti
 
 	// Create a new scope for this module, inheriting from the parent
 	libScope := environment.NewEnvironment(env)
-	
+
 	// Set up module-specific variables
 	// Set up module-specific variables with proper string values
 	filenameVal := values.MK_STRING(fmt.Sprintf("\"%s\"", libpath))
 	dirnameVal := values.MK_STRING(fmt.Sprintf("\"%s\"", filepath.Dir(libpath)))
-	
+
 	libScope.DeclareVar("__filename__", filenameVal, true) // constant
 	libScope.DeclareVar("__dirname__", dirnameVal, true)   // constant
 
@@ -294,8 +294,8 @@ func evaluateModule(libpath string, env *environment.Environment) (*shared.Runti
 
 	// Evaluate the module's AST in the new scope
 	libExports, evaluatorError := evaluator.Evaluate(
-		lib, 
-		&libScope, 
+		lib,
+		&libScope,
 		xShared.XelRootDebugger,
 	)
 

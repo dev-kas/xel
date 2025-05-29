@@ -10,11 +10,11 @@ import (
 
 func module() (*shared.RuntimeValue, *errors.RuntimeError) {
 	mod := values.MK_OBJECT(map[string]*shared.RuntimeValue{
-		"now":      &now,
-		"sleep":    &sleep,
-		"format":   &format,
-		"parse":    &parse,
-		"timer":    &timer,
+		"now":    &now,
+		"sleep":  &sleep,
+		"format": &format,
+		"parse":  &parse,
+		"timer":  &timer,
 	})
 
 	return &mod, nil

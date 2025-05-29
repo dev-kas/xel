@@ -54,7 +54,7 @@ func FetchManifest(pwd string, initialPwd string) (*shared.ProjectManifest, stri
 	if pwd != "/" {
 		// Construct the full path to the potential manifest file
 		manifestPath := filepath.Join(pwd, "xel.json")
-		
+
 		// Attempt to read the manifest file
 		manifestContent, err := os.ReadFile(manifestPath)
 		if err != nil {
@@ -65,7 +65,7 @@ func FetchManifest(pwd string, initialPwd string) (*shared.ProjectManifest, stri
 
 		// Initialize a new ProjectManifest structure to hold the parsed data
 		manifest := shared.ProjectManifest{}
-		
+
 		// Parse the JSON content into the manifest structure
 		if err := json.Unmarshal(manifestContent, &manifest); err != nil {
 			return nil, "", fmt.Errorf("failed to parse manifest at %s: %v", manifestPath, err)
