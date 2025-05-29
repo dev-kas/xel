@@ -2,13 +2,30 @@ package helpers
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/dev-kas/virtlang-go/v3/shared"
-	"github.com/dev-kas/virtlang-go/v3/values"
 )
 
 func Stringify(value shared.RuntimeValue, internal bool) string {
+	return stringifyWithVisited(value, internal, make(map[uintptr]bool))
+}
+
+func stringifyWithVisited(value shared.RuntimeValue, internal bool, visited map[uintptr]bool) string {
 	output := ""
+
+	if value.Type == shared.Object || value.Type == shared.Array || value.Type == shared.ClassInstance {
+		if value.Value == nil {
+			return "null"
+		}
+		ptr := reflect.ValueOf(value.Value).Pointer()
+		if visited[ptr] {
+			return "[Circular]"
+		}
+		visited[ptr] = true
+		defer delete(visited, ptr)
+	}
+
 	switch value.Type {
 	case shared.String:
 		if internal {
@@ -28,19 +45,25 @@ func Stringify(value shared.RuntimeValue, internal bool) string {
 		output += "nil"
 	case shared.Object:
 		output += "{\r\n"
+		first := true
 		for key, val := range value.Value.(map[string]*shared.RuntimeValue) {
-			output += "  " + key + ": " + Stringify(*val, true) + "\r\n"
-		}
-		output += "}"
-	case shared.Array:
-		output += "["
-		for i, val := range value.Value.([]shared.RuntimeValue) {
-			output += Stringify(val, true)
-			if i != len(value.Value.([]shared.RuntimeValue))-1 {
-				output += ", "
+			if !first {
+				output += ",\r\n"
 			}
+			first = false
+			output += fmt.Sprintf("\t%s: %s", key, stringifyWithVisited(*val, internal, visited)) + "\r\n"
 		}
-		output += "]"
+		output += "\r\n}"
+	case shared.Array:
+		arr := value.Value.([]shared.RuntimeValue)
+		output += "[\r\n"
+		for i, val := range arr {
+			if i > 0 {
+				output += ",\r\n"
+			}
+			output += "\t" + stringifyWithVisited(val, internal, visited)
+		}
+		output += "\r\n]"
 	case shared.Function:
 		output += "<function>"
 	case shared.NativeFN:
@@ -48,14 +71,7 @@ func Stringify(value shared.RuntimeValue, internal bool) string {
 	case shared.Class:
 		output += "<class>"
 	case shared.ClassInstance:
-		keyValuePair := map[string]*shared.RuntimeValue{}
-		ciVal := value.Value.(values.ClassInstanceValue)
-		for key, val := range ciVal.Data.Variables {
-			if ciVal.Publics[key] {
-				keyValuePair[key] = &val
-			}
-		}
-		output += Stringify(values.MK_OBJECT(keyValuePair), true)
+		output += "[ClassInstance]"
 
 	default:
 		output += fmt.Sprintf("Unknown - %+v", value.Value)
