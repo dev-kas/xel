@@ -156,9 +156,8 @@ var Import = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environme
 			}
 		}
 
-		// Extract and clean the version constraint (removing surrounding quotes)
+		// Extract the version constraint
 		constraint := pkgConstraint.Value.(string)
-		constraint = constraint[1 : len(constraint)-1]
 
 		// Resolve the module using the package manager to get its actual location
 		pkgManifestPath, pkgManifest, resolutionErr := helpers.ResolveModule(libname, constraint)
@@ -175,7 +174,7 @@ var Import = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environme
 
 		// Helper to store string values in the manifest
 		addStringField := func(key, value string) {
-			val := stringToRuntimeValue(value)
+			val := values.MK_STRING(value)
 			manifestConverted[key] = &val
 		}
 
@@ -192,7 +191,7 @@ var Import = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environme
 		// Convert dependencies map to runtime format
 		depsMap := make(map[string]*shared.RuntimeValue, len(pkgManifest.Deps))
 		for depName, depConstraint := range pkgManifest.Deps {
-			depVal := stringToRuntimeValue(depConstraint)
+			depVal := values.MK_STRING(depConstraint)
 			depsMap[depName] = &depVal
 		}
 		depsObj := values.MK_OBJECT(depsMap)
@@ -240,13 +239,6 @@ var Import = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environme
 	return libExports, nil
 })
 
-// Helper function to convert string values to runtime string literals
-// Returns a RuntimeValue (not a pointer) for use with DeclareVar
-func stringToRuntimeValue(s string) shared.RuntimeValue {
-	// Create a string value with proper escaping and quotes
-	return values.MK_STRING(fmt.Sprintf("\"%s\"", s))
-}
-
 // evaluateModule loads, parses, and evaluates a module file, returning its exports.
 // It handles setting up the module environment and populating special variables.
 //
@@ -280,8 +272,8 @@ func evaluateModule(libpath string, env *environment.Environment) (*shared.Runti
 
 	// Set up module-specific variables
 	// Set up module-specific variables with proper string values
-	filenameVal := values.MK_STRING(fmt.Sprintf("\"%s\"", libpath))
-	dirnameVal := values.MK_STRING(fmt.Sprintf("\"%s\"", filepath.Dir(libpath)))
+	filenameVal := values.MK_STRING(libpath)
+	dirnameVal := values.MK_STRING(filepath.Dir(libpath))
 
 	libScope.DeclareVar("__filename__", filenameVal, true) // constant
 	libScope.DeclareVar("__dirname__", dirnameVal, true)   // constant

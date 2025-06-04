@@ -1,8 +1,6 @@
 package globals
 
 import (
-	"fmt"
-
 	xShared "xel/shared"
 
 	"github.com/dev-kas/virtlang-go/v4/shared"
@@ -12,10 +10,10 @@ import (
 func Proc() shared.RuntimeValue {
 	retVal := values.MK_OBJECT(map[string]*shared.RuntimeValue{})
 
-	runtime_version := values.MK_STRING(fmt.Sprintf("\"%s\"", xShared.RuntimeVersion))
+	runtime_version := values.MK_STRING(xShared.RuntimeVersion)
 	retVal.Value.(map[string]*shared.RuntimeValue)["runtime_version"] = &runtime_version
 
-	engine_version := values.MK_STRING(fmt.Sprintf("\"%s\"", xShared.EngineVersion))
+	engine_version := values.MK_STRING(xShared.EngineVersion)
 	retVal.Value.(map[string]*shared.RuntimeValue)["engine_version"] = &engine_version
 
 	return retVal

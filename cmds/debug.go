@@ -132,34 +132,34 @@ func DebugCommand() *cli.Command {
 			// Convert arguments to []shared.RuntimeValue
 			args := make([]shared.RuntimeValue, len(rawArgs))
 			for i, arg := range rawArgs {
-				args[i] = values.MK_STRING(fmt.Sprintf("\"%s\"", arg))
+				args[i] = values.MK_STRING(arg)
 			}
 
 			// Convert manifest to a VirtLang object
 			// Note: This is not reliable because if `manifest` does not exist, it will only use default values
 			manifestConverted := map[string]*shared.RuntimeValue{}
-			nameVal := values.MK_STRING(fmt.Sprintf("\"%s\"", manifest.Name))
+			nameVal := values.MK_STRING(manifest.Name)
 			manifestConverted["name"] = &nameVal
-			descVal := values.MK_STRING(fmt.Sprintf("\"%s\"", manifest.Description))
+			descVal := values.MK_STRING(manifest.Description)
 			manifestConverted["description"] = &descVal
-			versionVal := values.MK_STRING(fmt.Sprintf("\"%s\"", manifest.Version))
+			versionVal := values.MK_STRING(manifest.Version)
 			manifestConverted["version"] = &versionVal
-			xelVal := values.MK_STRING(fmt.Sprintf("\"%s\"", manifest.Xel))
+			xelVal := values.MK_STRING(manifest.Xel)
 			manifestConverted["xel"] = &xelVal
-			engineVal := values.MK_STRING(fmt.Sprintf("\"%s\"", manifest.Engine))
+			engineVal := values.MK_STRING(manifest.Engine)
 			manifestConverted["engine"] = &engineVal
-			mainVal := values.MK_STRING(fmt.Sprintf("\"%s\"", manifest.Main))
+			mainVal := values.MK_STRING(manifest.Main)
 			manifestConverted["main"] = &mainVal
-			authorVal := values.MK_STRING(fmt.Sprintf("\"%s\"", manifest.Author))
+			authorVal := values.MK_STRING(manifest.Author)
 			manifestConverted["author"] = &authorVal
-			licenseVal := values.MK_STRING(fmt.Sprintf("\"%s\"", manifest.License))
+			licenseVal := values.MK_STRING(manifest.License)
 			manifestConverted["license"] = &licenseVal
 			// Convert deps map separately
 			depsObj := values.MK_OBJECT(map[string]*shared.RuntimeValue{})
 			manifestConverted["deps"] = &depsObj
 			depsMap := make(map[string]*shared.RuntimeValue)
 			for k, v := range manifest.Deps {
-				depVal := values.MK_STRING(fmt.Sprintf("\"%s\"", v))
+				depVal := values.MK_STRING(v)
 				depsMap[k] = &depVal
 			}
 			(*manifestConverted["deps"]).Value = depsMap
@@ -200,8 +200,8 @@ func DebugCommand() *cli.Command {
 			rootEnv.AssignVar("proc", values.MK_OBJECT(RV_proc))
 
 			env := environment.NewEnvironment(rootEnv)
-			env.DeclareVar("__filename__", values.MK_STRING(fmt.Sprintf("\"%s\"", filename)), true)
-			env.DeclareVar("__dirname__", values.MK_STRING(fmt.Sprintf("\"%s\"", filepath.Dir(filename))), true)
+			env.DeclareVar("__filename__", values.MK_STRING(filename), true)
+			env.DeclareVar("__dirname__", values.MK_STRING(filepath.Dir(filename)), true)
 
 			// We first have to pause the debugger or
 			// else it will run the program without stopping
