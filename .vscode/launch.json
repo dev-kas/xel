@@ -11,7 +11,7 @@
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}",
-            "args": ["run", "example/launchpad/main.xel"],
+            "args": ["run", "example/parallelism/main.xel"],
             "console": "integratedTerminal"
         }
     ]

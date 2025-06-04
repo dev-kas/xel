@@ -2,7 +2,7 @@ const threads = import("xel:threads")
 
 let i = 0
 fn workerFN() {
-    while (i < 100000) {
+    while (i < 10000000) {
         i = i + 1
     }
 }
@@ -17,8 +17,10 @@ while (x < 1000) {
 }
 
 worker.kill()
+worker.join()
 
 print("Time", worker.time())
 print("DONE!")
 
 print(worker.status())
+print(worker)

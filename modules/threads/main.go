@@ -2,13 +2,14 @@ package threads
 
 import (
 	"context"
+	"runtime"
 	"sync"
 	"time"
 	"xel/modules"
 
-	"github.com/dev-kas/virtlang-go/v2/errors"
-	"github.com/dev-kas/virtlang-go/v2/shared"
-	"github.com/dev-kas/virtlang-go/v2/values"
+	"github.com/dev-kas/virtlang-go/v4/errors"
+	"github.com/dev-kas/virtlang-go/v4/shared"
+	"github.com/dev-kas/virtlang-go/v4/values"
 )
 
 type ThreadStatus string
@@ -20,16 +21,22 @@ const (
 )
 
 type Thread struct {
-	ID         int
-	Result     chan *shared.RuntimeValue
-	Error      chan *errors.RuntimeError
-	StartedAt  time.Time
-	FinishedAt time.Time
-	Cancel     context.CancelFunc
-	Context    context.Context
-	Status     ThreadStatus
+	ID          int
+	mu          sync.Mutex
+	Result      chan *shared.RuntimeValue
+	Error       chan *errors.RuntimeError
+	ReturnValue *shared.RuntimeValue
+	StartedAt   time.Time
+	FinishedAt  time.Time
+	Cancel      context.CancelFunc
+	Context     context.Context
+	Status      ThreadStatus
 }
 
+var maxRunningThreads = max(256, runtime.NumCPU()*32)
+
+var threadLimiter = make(chan struct{}, maxRunningThreads)
+var threadsGroup sync.WaitGroup
 var threads []*Thread
 var threadsMutex sync.Mutex
 
@@ -37,7 +44,7 @@ func module() (*shared.RuntimeValue, *errors.RuntimeError) {
 	mod := values.MK_OBJECT(map[string]*shared.RuntimeValue{
 		"spawn":      &spawn,
 		"waitForAll": &waitForAll,
-		// "killAll":    &killAll,
+		"killAll":    &killAll,
 	})
 
 	return &mod, nil

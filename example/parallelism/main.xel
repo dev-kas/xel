@@ -1,31 +1,36 @@
 const threads = import("xel:threads")
-const strings = import("xel:strings")
 const array   = import("xel:array")
 
-fn fib(n) {
-    print("fib(", n, ")")
+fn fib(n, id) {
+    if (id != nil) {
+        print("fib(", n, ", ", id, ")")
+    } else {
+        print("fib(", n, ")")
+    }
     if (n <= 1) {
         return n
     }
-    return fib(n - 1) + fib(n - 2)
+    return fib(n - 1, id) + fib(n - 2, id)
 }
 
 fn spawnNWorkers(n, paramOffset) {
     let workers = []
     let i = 0
     while (i < n) {
-        workers = array.push(workers, threads.spawn(fib, i + paramOffset))
+        workers = array.push(workers, threads.spawn(fib, i + paramOffset, i))
         i = i + 1
     }
     return workers
 }
 
-const WORKERS      = 10
-const PARAM_OFFSET = 0
+const WORKERS      = 25
+const PARAM_OFFSET = 1
 
 const workers = spawnNWorkers(WORKERS, PARAM_OFFSET)
+// threads.killAll()
 
 threads.waitForAll()
+
 
 let results = []
 array.forEach(workers, (fn(worker){
