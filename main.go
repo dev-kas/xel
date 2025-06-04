@@ -19,8 +19,8 @@ import (
 	_ "xel/modules/array"
 	_ "xel/modules/math"
 	_ "xel/modules/strings"
-	_ "xel/modules/time"
 	_ "xel/modules/threads"
+	_ "xel/modules/time"
 
 	"github.com/chzyer/readline"
 	"github.com/dev-kas/virtlang-go/v4/environment"

@@ -49,10 +49,16 @@ var spawn = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environmen
 
 	threadsGroup.Add(1)
 
-	go func(t *Thread, fnVal shared.RuntimeValue) { 
+	go func(t *Thread, fnVal shared.RuntimeValue) {
 		defer func() {
-			select { case t.Result <- t.ReturnValue: default: }
-			select { case t.Error <- nil: default: }
+			select {
+			case t.Result <- t.ReturnValue:
+			default:
+			}
+			select {
+			case t.Error <- nil:
+			default:
+			}
 
 			<-threadLimiter
 			threadsGroup.Done()
