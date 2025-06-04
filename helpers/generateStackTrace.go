@@ -5,7 +5,7 @@ import (
 
 	xShared "xel/shared"
 
-	"github.com/dev-kas/virtlang-go/v3/debugger"
+	"github.com/dev-kas/virtlang-go/v4/debugger"
 )
 
 func GenerateStackTrace(stack debugger.CallStack, cwd string) string {

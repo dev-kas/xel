@@ -5,10 +5,10 @@ import (
 
 	"xel/helpers"
 
-	"github.com/dev-kas/virtlang-go/v3/environment"
-	"github.com/dev-kas/virtlang-go/v3/errors"
-	"github.com/dev-kas/virtlang-go/v3/shared"
-	"github.com/dev-kas/virtlang-go/v3/values"
+	"github.com/dev-kas/virtlang-go/v4/environment"
+	"github.com/dev-kas/virtlang-go/v4/errors"
+	"github.com/dev-kas/virtlang-go/v4/shared"
+	"github.com/dev-kas/virtlang-go/v4/values"
 )
 
 var join = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environment.Environment) (*shared.RuntimeValue, *errors.RuntimeError) {
@@ -26,11 +26,7 @@ var join = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environment
 			return nil, &errors.RuntimeError{Message: fmt.Sprintf("join() expects string as second argument, got %s", shared.Stringify(args[1].Type))}
 		}
 
-		inputStr := args[1].Value.(string)
-
-		if len(inputStr) > 1 && (inputStr[0] == inputStr[len(inputStr)-1]) && (inputStr[0] == '"' || inputStr[0] == '\'') {
-			separator = inputStr[1 : len(inputStr)-1]
-		}
+		separator = args[1].Value.(string)
 	}
 
 	array := args[0].Value.([]shared.RuntimeValue)
@@ -44,6 +40,6 @@ var join = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environment
 		result += strValue
 	}
 
-	res := values.MK_STRING(fmt.Sprintf("\"%s\"", result))
+	res := values.MK_STRING(result)
 	return &res, nil
 })

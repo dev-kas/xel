@@ -5,10 +5,10 @@ import (
 	sort_ "sort"
 	"xel/helpers"
 
-	"github.com/dev-kas/virtlang-go/v3/environment"
-	"github.com/dev-kas/virtlang-go/v3/errors"
-	"github.com/dev-kas/virtlang-go/v3/shared"
-	"github.com/dev-kas/virtlang-go/v3/values"
+	"github.com/dev-kas/virtlang-go/v4/environment"
+	"github.com/dev-kas/virtlang-go/v4/errors"
+	"github.com/dev-kas/virtlang-go/v4/shared"
+	"github.com/dev-kas/virtlang-go/v4/values"
 )
 
 var sort = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environment.Environment) (*shared.RuntimeValue, *errors.RuntimeError) {

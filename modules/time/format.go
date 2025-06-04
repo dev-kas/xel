@@ -1,13 +1,12 @@
 package time
 
 import (
-	"fmt"
 	"time"
 
-	"github.com/dev-kas/virtlang-go/v3/environment"
-	"github.com/dev-kas/virtlang-go/v3/errors"
-	"github.com/dev-kas/virtlang-go/v3/shared"
-	"github.com/dev-kas/virtlang-go/v3/values"
+	"github.com/dev-kas/virtlang-go/v4/environment"
+	"github.com/dev-kas/virtlang-go/v4/errors"
+	"github.com/dev-kas/virtlang-go/v4/shared"
+	"github.com/dev-kas/virtlang-go/v4/values"
 )
 
 // Formats a time in milliseconds since the unix epoch in given format or ISO 8601 by default
@@ -28,10 +27,9 @@ var format = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environme
 			return nil, &errors.RuntimeError{Message: "format() expects a string as second argument"}
 		}
 		timeFormat = args[1].Value.(string)
-		timeFormat = timeFormat[1 : len(timeFormat)-1]
 	}
 
 	formatted := timeInput.Format(timeFormat)
-	retVal := values.MK_STRING(fmt.Sprintf("%q", formatted))
+	retVal := values.MK_STRING(formatted)
 	return &retVal, nil
 })

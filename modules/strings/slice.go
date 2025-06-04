@@ -1,12 +1,10 @@
 package strings
 
 import (
-	"fmt"
-
-	"github.com/dev-kas/virtlang-go/v3/environment"
-	"github.com/dev-kas/virtlang-go/v3/errors"
-	"github.com/dev-kas/virtlang-go/v3/shared"
-	"github.com/dev-kas/virtlang-go/v3/values"
+	"github.com/dev-kas/virtlang-go/v4/environment"
+	"github.com/dev-kas/virtlang-go/v4/errors"
+	"github.com/dev-kas/virtlang-go/v4/shared"
+	"github.com/dev-kas/virtlang-go/v4/values"
 )
 
 var slice = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environment.Environment) (*shared.RuntimeValue, *errors.RuntimeError) {
@@ -18,7 +16,6 @@ var slice = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environmen
 	}
 
 	str := args[0].Value.(string)
-	str = str[1 : len(str)-1]
 	runes := []rune(str)
 	length := len(runes)
 
@@ -60,6 +57,6 @@ var slice = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environmen
 		start = end
 	}
 
-	result := values.MK_STRING(fmt.Sprintf("\"%s\"", string(runes[start:end])))
+	result := values.MK_STRING(string(runes[start:end]))
 	return &result, nil
 })

@@ -5,8 +5,8 @@ import (
 
 	xShared "xel/shared"
 
-	"github.com/dev-kas/virtlang-go/v3/shared"
-	"github.com/dev-kas/virtlang-go/v3/values"
+	"github.com/dev-kas/virtlang-go/v4/shared"
+	"github.com/dev-kas/virtlang-go/v4/values"
 )
 
 func Proc() shared.RuntimeValue {

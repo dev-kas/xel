@@ -1,13 +1,12 @@
 package strings
 
 import (
-	"fmt"
 	"strings"
 
-	"github.com/dev-kas/virtlang-go/v3/environment"
-	"github.com/dev-kas/virtlang-go/v3/errors"
-	"github.com/dev-kas/virtlang-go/v3/shared"
-	"github.com/dev-kas/virtlang-go/v3/values"
+	"github.com/dev-kas/virtlang-go/v4/environment"
+	"github.com/dev-kas/virtlang-go/v4/errors"
+	"github.com/dev-kas/virtlang-go/v4/shared"
+	"github.com/dev-kas/virtlang-go/v4/values"
 )
 
 var toArray = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environment.Environment) (*shared.RuntimeValue, *errors.RuntimeError) {
@@ -16,10 +15,9 @@ var toArray = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environm
 	}
 
 	str := args[0].Value.(string)
-	str = str[1 : len(str)-1]
 	var result []shared.RuntimeValue
 	for _, s := range strings.Split(str, "") {
-		result = append(result, values.MK_STRING(fmt.Sprintf("\"%s\"", s)))
+		result = append(result, values.MK_STRING(s))
 	}
 
 	retVal := values.MK_ARRAY(result)

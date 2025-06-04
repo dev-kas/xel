@@ -3,7 +3,7 @@ package helpers
 import (
 	"reflect"
 
-	"github.com/dev-kas/virtlang-go/v3/shared"
+	"github.com/dev-kas/virtlang-go/v4/shared"
 )
 
 // EqualRuntimeValues compares two VirtLang RuntimeValue objects for equality.

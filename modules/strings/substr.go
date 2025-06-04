@@ -1,13 +1,12 @@
 package strings
 
 import (
-	"fmt"
 	"math"
 
-	"github.com/dev-kas/virtlang-go/v3/environment"
-	"github.com/dev-kas/virtlang-go/v3/errors"
-	"github.com/dev-kas/virtlang-go/v3/shared"
-	"github.com/dev-kas/virtlang-go/v3/values"
+	"github.com/dev-kas/virtlang-go/v4/environment"
+	"github.com/dev-kas/virtlang-go/v4/errors"
+	"github.com/dev-kas/virtlang-go/v4/shared"
+	"github.com/dev-kas/virtlang-go/v4/values"
 )
 
 var substr = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environment.Environment) (*shared.RuntimeValue, *errors.RuntimeError) {
@@ -16,7 +15,6 @@ var substr = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environme
 	}
 
 	str := args[0].Value.(string)
-	str = str[1 : len(str)-1]
 	start := int(args[1].Value.(float64))
 	length := len(str)
 	if len(args) == 3 {
@@ -41,6 +39,6 @@ var substr = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environme
 		end = start
 	}
 
-	result := values.MK_STRING(fmt.Sprintf("\"%s\"", str[start:end]))
+	result := values.MK_STRING(str[start:end])
 	return &result, nil
 })

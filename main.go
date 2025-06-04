@@ -22,15 +22,15 @@ import (
 	_ "xel/modules/time"
 
 	"github.com/chzyer/readline"
-	"github.com/dev-kas/virtlang-go/v3/environment"
-	"github.com/dev-kas/virtlang-go/v3/evaluator"
-	"github.com/dev-kas/virtlang-go/v3/parser"
+	"github.com/dev-kas/virtlang-go/v4/environment"
+	"github.com/dev-kas/virtlang-go/v4/evaluator"
+	"github.com/dev-kas/virtlang-go/v4/parser"
 	"github.com/fatih/color"
 	"github.com/urfave/cli/v2"
 )
 
 func main() {
-	globals.Globalize(&shared.XelRootEnv)
+	globals.Globalize(shared.XelRootEnv)
 	cli.VersionPrinter = func(c *cli.Context) {
 		fmt.Printf("VirtLang Engine version: %s - Xel version: %s \n", shared.ColorPalette.Version(shared.EngineVersion), shared.ColorPalette.Version(c.App.Version))
 	}
@@ -58,7 +58,7 @@ func main() {
 			sigChan := make(chan os.Signal, 1)
 			signal.Notify(sigChan, syscall.SIGINT)
 			defer rl.Close()
-			env := environment.NewEnvironment(&shared.XelRootEnv)
+			env := environment.NewEnvironment(shared.XelRootEnv)
 			for {
 				inputChan := make(chan string, 1)
 				errChan := make(chan error, 1)
@@ -104,7 +104,7 @@ func main() {
 						continue
 					}
 
-					output, oerr := evaluator.Evaluate(program, &env, shared.XelRootDebugger)
+					output, oerr := evaluator.Evaluate(program, env, shared.XelRootDebugger)
 					if oerr != nil && len(shared.XelRootDebugger.Snapshots) > 0 {
 						stackTrace := shared.XelRootDebugger.Snapshots[0]
 						stackTraceStr := helpers.GenerateStackTrace(stackTrace.Stack, "")

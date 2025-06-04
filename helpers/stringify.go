@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/dev-kas/virtlang-go/v3/shared"
+	"github.com/dev-kas/virtlang-go/v4/shared"
 )
 
 const (
@@ -112,21 +112,25 @@ func stringifyWithVisited(value shared.RuntimeValue, internal bool, visited map[
 		if value.Value == nil {
 			return "null"
 		}
-		ptr := reflect.ValueOf(value.Value).Pointer()
-		if visited[ptr] {
-			return "[Circular]"
+		// Only track pointers for non-nil values that can be addressed
+		val := reflect.ValueOf(value.Value)
+		if val.Kind() == reflect.Ptr && !val.IsNil() {
+			ptr := val.Pointer()
+			if visited[ptr] {
+				return "[Circular]"
+			}
+			visited[ptr] = true
+			defer delete(visited, ptr)
 		}
-		visited[ptr] = true
-		defer delete(visited, ptr)
 	}
 
 	output := ""
 	switch value.Type {
 	case shared.String:
 		if internal {
-			output += value.Value.(string)
+			output += fmt.Sprintf("%q", value.Value.(string))
 		} else {
-			output += value.Value.(string)[1 : len(value.Value.(string))-1]
+			output += value.Value.(string)
 		}
 	case shared.Number:
 		output += fmt.Sprintf("%g", value.Value.(float64))

@@ -15,12 +15,12 @@ import (
 	xShared "xel/shared"
 
 	// External dependencies
-	"github.com/dev-kas/virtlang-go/v3/environment"
-	"github.com/dev-kas/virtlang-go/v3/errors"
-	"github.com/dev-kas/virtlang-go/v3/evaluator"
-	"github.com/dev-kas/virtlang-go/v3/parser"
-	"github.com/dev-kas/virtlang-go/v3/shared"
-	"github.com/dev-kas/virtlang-go/v3/values"
+	"github.com/dev-kas/virtlang-go/v4/environment"
+	"github.com/dev-kas/virtlang-go/v4/errors"
+	"github.com/dev-kas/virtlang-go/v4/evaluator"
+	"github.com/dev-kas/virtlang-go/v4/parser"
+	"github.com/dev-kas/virtlang-go/v4/shared"
+	"github.com/dev-kas/virtlang-go/v4/values"
 )
 
 // importCache maintains a global cache of imported modules to prevent redundant
@@ -66,10 +66,8 @@ var Import = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environme
 		}
 	}
 
-	// Extract and clean the module name from the string literal
-	// Remove surrounding quotes from the module path
+	// Extract the module name from the string literal
 	libname := args[0].Value.(string)
-	libname = libname[1 : len(libname)-1]
 
 	// Check if the requested module is a native module
 	// Native modules are implemented in Go and provide core functionality
@@ -86,7 +84,7 @@ var Import = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environme
 
 	// Create a new environment for the module being imported
 	// This inherits from the root Xel environment
-	modEnv := environment.NewEnvironment(&xShared.XelRootEnv)
+	modEnv := environment.NewEnvironment(xShared.XelRootEnv)
 
 	// Determine if this is a local file import or a package import
 	// Local imports start with './' or '../'
@@ -234,7 +232,7 @@ var Import = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environme
 	defer delete(resolvingImports, libpath)
 
 	// Evaluate the module and get its exports
-	libExports, err := evaluateModule(libpath, &modEnv)
+	libExports, err := evaluateModule(libpath, modEnv)
 	if err != nil {
 		return nil, err
 	}
@@ -295,7 +293,7 @@ func evaluateModule(libpath string, env *environment.Environment) (*shared.Runti
 	// Evaluate the module's AST in the new scope
 	libExports, evaluatorError := evaluator.Evaluate(
 		lib,
-		&libScope,
+		libScope,
 		xShared.XelRootDebugger,
 	)
 

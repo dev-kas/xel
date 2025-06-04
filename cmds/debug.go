@@ -15,11 +15,11 @@ import (
 	"github.com/Masterminds/semver/v3"
 	"github.com/chzyer/readline"
 
-	"github.com/dev-kas/virtlang-go/v3/environment"
-	"github.com/dev-kas/virtlang-go/v3/evaluator"
-	"github.com/dev-kas/virtlang-go/v3/parser"
-	"github.com/dev-kas/virtlang-go/v3/shared"
-	"github.com/dev-kas/virtlang-go/v3/values"
+	"github.com/dev-kas/virtlang-go/v4/environment"
+	"github.com/dev-kas/virtlang-go/v4/evaluator"
+	"github.com/dev-kas/virtlang-go/v4/parser"
+	"github.com/dev-kas/virtlang-go/v4/shared"
+	"github.com/dev-kas/virtlang-go/v4/values"
 	"github.com/fatih/color"
 	"github.com/urfave/cli/v2"
 )
@@ -176,7 +176,7 @@ func DebugCommand() *cli.Command {
 				return parseErr
 			}
 
-			rootEnv := &xShared.XelRootEnv
+			rootEnv := xShared.XelRootEnv
 			RV_proc := map[string]*shared.RuntimeValue{}
 
 			// Check if proc exists
@@ -212,7 +212,7 @@ func DebugCommand() *cli.Command {
 			// also run it in parallel with the evaluation
 			go debug_repl(filename, cwd)
 
-			_, evalErr := evaluator.Evaluate(program, &env, xShared.XelRootDebugger)
+			_, evalErr := evaluator.Evaluate(program, env, xShared.XelRootDebugger)
 			if evalErr != nil {
 				// show the stack trace
 				stackTrace := xShared.XelRootDebugger.Snapshots[0]

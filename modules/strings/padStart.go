@@ -1,13 +1,12 @@
 package strings
 
 import (
-	"fmt"
 	"strings"
 
-	"github.com/dev-kas/virtlang-go/v3/environment"
-	"github.com/dev-kas/virtlang-go/v3/errors"
-	"github.com/dev-kas/virtlang-go/v3/shared"
-	"github.com/dev-kas/virtlang-go/v3/values"
+	"github.com/dev-kas/virtlang-go/v4/environment"
+	"github.com/dev-kas/virtlang-go/v4/errors"
+	"github.com/dev-kas/virtlang-go/v4/shared"
+	"github.com/dev-kas/virtlang-go/v4/values"
 )
 
 var padStart = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environment.Environment) (*shared.RuntimeValue, *errors.RuntimeError) {
@@ -16,7 +15,6 @@ var padStart = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environ
 	}
 
 	str := args[0].Value.(string)
-	str = str[1 : len(str)-1]
 	targetLen := int(args[1].Value.(float64))
 	padStr := " "
 	if len(args) == 3 {
@@ -24,7 +22,6 @@ var padStart = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environ
 			return nil, &errors.RuntimeError{Message: "padString must be a string"}
 		}
 		padStr = args[2].Value.(string)
-		padStr = padStr[1 : len(padStr)-1]
 		if padStr == "" {
 			return &args[0], nil
 		}
@@ -38,6 +35,6 @@ var padStart = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environ
 	repeats := (padLen + len(padStr) - 1) / len(padStr)
 	padding := (strings.Repeat(padStr, repeats))[:padLen]
 
-	result := values.MK_STRING(fmt.Sprintf("\"%s\"", padding+str))
+	result := values.MK_STRING(padding + str)
 	return &result, nil
 })

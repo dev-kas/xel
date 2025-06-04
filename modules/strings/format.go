@@ -7,10 +7,10 @@ import (
 	"strings"
 	"xel/helpers"
 
-	"github.com/dev-kas/virtlang-go/v3/environment"
-	"github.com/dev-kas/virtlang-go/v3/errors"
-	"github.com/dev-kas/virtlang-go/v3/shared"
-	"github.com/dev-kas/virtlang-go/v3/values"
+	"github.com/dev-kas/virtlang-go/v4/environment"
+	"github.com/dev-kas/virtlang-go/v4/errors"
+	"github.com/dev-kas/virtlang-go/v4/shared"
+	"github.com/dev-kas/virtlang-go/v4/values"
 )
 
 var format = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environment.Environment) (*shared.RuntimeValue, *errors.RuntimeError) {
@@ -19,7 +19,6 @@ var format = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environme
 	}
 
 	formatStr := args[0].Value.(string)
-	formatStr = formatStr[1 : len(formatStr)-1]
 
 	vCount := strings.Count(formatStr, "%v")
 	re := regexp.MustCompile(`%[^v%]`)
@@ -39,6 +38,6 @@ var format = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environme
 	}
 
 	formattedStr := fmt.Sprintf(formatStr, valuesToInsert...)
-	retVal := values.MK_STRING(fmt.Sprintf("\"%s\"", formattedStr))
+	retVal := values.MK_STRING(formattedStr)
 	return &retVal, nil
 })

@@ -3,10 +3,10 @@ package strings
 import (
 	"strings"
 
-	"github.com/dev-kas/virtlang-go/v3/environment"
-	"github.com/dev-kas/virtlang-go/v3/errors"
-	"github.com/dev-kas/virtlang-go/v3/shared"
-	"github.com/dev-kas/virtlang-go/v3/values"
+	"github.com/dev-kas/virtlang-go/v4/environment"
+	"github.com/dev-kas/virtlang-go/v4/errors"
+	"github.com/dev-kas/virtlang-go/v4/shared"
+	"github.com/dev-kas/virtlang-go/v4/values"
 )
 
 var indexOf = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environment.Environment) (*shared.RuntimeValue, *errors.RuntimeError) {
@@ -14,9 +14,7 @@ var indexOf = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environm
 		return nil, &errors.RuntimeError{Message: "indexOf expects (string, substring, ?start)"}
 	}
 	str := args[0].Value.(string)
-	str = str[1 : len(str)-1]
 	search := args[1].Value.(string)
-	search = search[1 : len(search)-1]
 	start := 0
 	if len(args) > 2 {
 		if args[2].Type != shared.Number {

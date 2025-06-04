@@ -3,10 +3,10 @@ package strings
 import (
 	"strings"
 
-	"github.com/dev-kas/virtlang-go/v3/environment"
-	"github.com/dev-kas/virtlang-go/v3/errors"
-	"github.com/dev-kas/virtlang-go/v3/shared"
-	"github.com/dev-kas/virtlang-go/v3/values"
+	"github.com/dev-kas/virtlang-go/v4/environment"
+	"github.com/dev-kas/virtlang-go/v4/errors"
+	"github.com/dev-kas/virtlang-go/v4/shared"
+	"github.com/dev-kas/virtlang-go/v4/values"
 )
 
 var lastIndexOf = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environment.Environment) (*shared.RuntimeValue, *errors.RuntimeError) {
@@ -14,9 +14,7 @@ var lastIndexOf = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *envi
 		return nil, &errors.RuntimeError{Message: "lastIndexOf expects (string, substring, ?end)"}
 	}
 	str := args[0].Value.(string)
-	str = str[1 : len(str)-1]
 	search := args[1].Value.(string)
-	search = search[1 : len(search)-1]
 	end := len(str)
 	if len(args) > 2 {
 		if args[2].Type != shared.Number {

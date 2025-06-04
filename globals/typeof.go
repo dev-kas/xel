@@ -1,12 +1,10 @@
 package globals
 
 import (
-	"fmt"
-
-	"github.com/dev-kas/virtlang-go/v3/environment"
-	"github.com/dev-kas/virtlang-go/v3/errors"
-	"github.com/dev-kas/virtlang-go/v3/shared"
-	"github.com/dev-kas/virtlang-go/v3/values"
+	"github.com/dev-kas/virtlang-go/v4/environment"
+	"github.com/dev-kas/virtlang-go/v4/errors"
+	"github.com/dev-kas/virtlang-go/v4/shared"
+	"github.com/dev-kas/virtlang-go/v4/values"
 )
 
 var Typeof = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environment.Environment) (*shared.RuntimeValue, *errors.RuntimeError) {
@@ -15,6 +13,6 @@ var Typeof = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environme
 			Message: "typeof() takes exactly one argument",
 		}
 	}
-	result := values.MK_STRING(fmt.Sprintf("\"%s\"", shared.Stringify(args[0].Type)))
+	result := values.MK_STRING(shared.Stringify(args[0].Type))
 	return &result, nil
 })

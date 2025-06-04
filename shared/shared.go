@@ -5,16 +5,16 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/dev-kas/virtlang-go/v3/debugger"
-	"github.com/dev-kas/virtlang-go/v3/environment"
+	"github.com/dev-kas/virtlang-go/v4/debugger"
+	"github.com/dev-kas/virtlang-go/v4/environment"
 	"github.com/fatih/color"
 )
 
 var RuntimeVersion string
 var EngineVersion string
 
-var XelRootEnv environment.Environment = environment.NewEnvironment(nil)
-var XelRootDebugger *debugger.Debugger = debugger.NewDebugger(&XelRootEnv)
+var XelRootEnv *environment.Environment = environment.NewEnvironment(nil)
+var XelRootDebugger *debugger.Debugger = debugger.NewDebugger(XelRootEnv)
 
 func XelDir() string {
 	homeDir, err := os.UserHomeDir()
