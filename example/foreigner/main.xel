@@ -1,0 +1,17 @@
+const native = import("xel:native")
+
+let libpath = proc.args[0]
+if (libpath == nil) {
+	libpath = "../xel-napi-test/target/release/libxel_napi_test.so"
+}
+const hello = native.load(libpath)
+
+let concat_o = hello.call("concat", ["hello from", "xel"])
+let add_o = hello.call("add", [5, 13])
+
+print(concat_o, "<= FF output", typeof(concat_o))
+print(add_o, "<= FF another output", typeof(add_o))
+
+hello.call("log_args", ["hello", "from", "xel", proc.args[0]])
+
+hello.unload()
