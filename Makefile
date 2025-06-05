@@ -4,18 +4,30 @@ ENGINE_VERSION ?= 1.0.0
 test:
 	go test ./...
 
-build-mac:
-	GOOS='darwin' GOARCH='amd64' go build -ldflags="-X xel/shared.RuntimeVersion=$(VERSION) -X xel/shared.EngineVersion=$(ENGINE_VERSION)" -o ./bin/xel-darwin-amd64
-	GOOS='darwin' GOARCH='arm64' go build -ldflags="-X xel/shared.RuntimeVersion=$(VERSION) -X xel/shared.EngineVersion=$(ENGINE_VERSION)" -o ./bin/xel-darwin-arm64
+# macOS builds
+build-darwin-amd64:
+	GOOS='darwin' GOARCH='amd64' CGO_ENABLED=1 go build -ldflags="-X xel/shared.RuntimeVersion=$(VERSION) -X xel/shared.EngineVersion=$(ENGINE_VERSION)" -o ./bin/xel-darwin-amd64
 
-build-linux:
-	GOOS='linux' GOARCH='amd64' go build -ldflags="-X xel/shared.RuntimeVersion=$(VERSION) -X xel/shared.EngineVersion=$(ENGINE_VERSION)" -o ./bin/xel-linux-amd64
-	GOOS='linux' GOARCH='arm64' go build -ldflags="-X xel/shared.RuntimeVersion=$(VERSION) -X xel/shared.EngineVersion=$(ENGINE_VERSION)" -o ./bin/xel-linux-arm64
+build-darwin-arm64:
+	GOOS='darwin' GOARCH='arm64' CGO_ENABLED=1 go build -ldflags="-X xel/shared.RuntimeVersion=$(VERSION) -X xel/shared.EngineVersion=$(ENGINE_VERSION)" -o ./bin/xel-darwin-arm64
 
-build-windows:
-	GOOS='windows' GOARCH='amd64' go build -ldflags="-X xel/shared.RuntimeVersion=$(VERSION) -X xel/shared.EngineVersion=$(ENGINE_VERSION)" -o ./bin/xel-windows-amd64.exe
-	GOOS='windows' GOARCH='arm64' go build -ldflags="-X xel/shared.RuntimeVersion=$(VERSION) -X xel/shared.EngineVersion=$(ENGINE_VERSION)" -o ./bin/xel-windows-arm64.exe
+build-mac: build-darwin-amd64 build-darwin-arm64
 
-build: build-mac build-linux build-windows
+# Linux builds
+build-linux-amd64:
+	GOOS='linux' GOARCH='amd64' CGO_ENABLED=1 go build -ldflags="-X xel/shared.RuntimeVersion=$(VERSION) -X xel/shared.EngineVersion=$(ENGINE_VERSION)" -o ./bin/xel-linux-amd64
 
-build-all: build
+build-linux-arm64:
+	CC=aarch64-linux-gnu-gcc GOOS='linux' GOARCH='arm64' CGO_ENABLED=1 go build -ldflags="-X xel/shared.RuntimeVersion=$(VERSION) -X xel/shared.EngineVersion=$(ENGINE_VERSION)" -o ./bin/xel-linux-arm64
+
+build-linux: build-linux-amd64 build-linux-arm64
+
+# Windows builds
+build-windows-amd64:
+	CC=x86_64-w64-mingw32-gcc GOOS='windows' GOARCH='amd64' CGO_ENABLED=1 go build -ldflags="-X xel/shared.RuntimeVersion=$(VERSION) -X xel/shared.EngineVersion=$(ENGINE_VERSION)" -o ./bin/xel-windows-amd64.exe
+
+build-windows: build-windows-amd64
+
+# All builds
+build-all: build-mac build-linux build-windows
+build: build-all
