@@ -7,11 +7,7 @@
 #include <dlfcn.h>
 #endif
 
-#ifndef __cplusplus
-typedef unsigned char bool;
-#define true 1
-#define false 0
-#endif
+#include <stdbool.h>
 
 typedef void* LibHandle;
 
