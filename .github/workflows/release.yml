@@ -19,12 +19,12 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 # Updated to v4
         with:
           fetch-depth: 0  # Fetch all history for tags
       
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5 # Updated to v5
         with:
           go-version: '1.23.2'
       
@@ -54,10 +54,10 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 # Updated to v4
       
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5 # Updated to v5
         with:
           go-version: '1.23.2'
       
@@ -70,7 +70,7 @@ jobs:
           make build-linux-amd64 VERSION=${{ needs.setup.outputs.version }} ENGINE_VERSION=${{ needs.setup.outputs.engine_version }}
       
       - name: Upload Linux amd64 binary
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4 # Updated to v4
         with:
           name: xel-linux-amd64
           path: ./bin/xel-linux-amd64
@@ -84,10 +84,10 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 # Updated to v4
       
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5 # Updated to v5
         with:
           go-version: '1.23.2'
       
@@ -105,7 +105,7 @@ jobs:
           make build-linux-arm64 VERSION=${{ needs.setup.outputs.version }} ENGINE_VERSION=${{ needs.setup.outputs.engine_version }}
       
       - name: Upload Linux arm64 binary
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4 # Updated to v4
         with:
           name: xel-linux-arm64
           path: ./bin/xel-linux-arm64
@@ -119,10 +119,10 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 # Updated to v4
       
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5 # Updated to v5
         with:
           go-version: '1.23.2'
       
@@ -140,7 +140,7 @@ jobs:
           make build-windows-amd64 VERSION=${{ needs.setup.outputs.version }} ENGINE_VERSION=${{ needs.setup.outputs.engine_version }}
       
       - name: Upload Windows amd64 binary
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4 # Updated to v4
         with:
           name: xel-windows-amd64
           path: ./bin/xel-windows-amd64.exe
@@ -154,10 +154,10 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 # Updated to v4
       
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5 # Updated to v5
         with:
           go-version: '1.23.2'
       
@@ -170,7 +170,7 @@ jobs:
           make build-darwin-amd64 VERSION=${{ needs.setup.outputs.version }} ENGINE_VERSION=${{ needs.setup.outputs.engine_version }}
       
       - name: Upload macOS amd64 binary
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4 # Updated to v4
         with:
           name: xel-darwin-amd64
           path: ./bin/xel-darwin-amd64
@@ -184,10 +184,10 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 # Updated to v4
       
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5 # Updated to v5
         with:
           go-version: '1.23.2'
       
@@ -200,7 +200,7 @@ jobs:
           make build-darwin-arm64 VERSION=${{ needs.setup.outputs.version }} ENGINE_VERSION=${{ needs.setup.outputs.engine_version }}
       
       - name: Upload macOS arm64 binary
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4 # Updated to v4
         with:
           name: xel-darwin-arm64
           path: ./bin/xel-darwin-arm64
@@ -218,34 +218,34 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 # Updated to v4
       
       - name: Download Linux amd64 binary
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4 # Updated to v4
         with:
           name: xel-linux-amd64
           path: ./release-assets
       
       - name: Download Linux arm64 binary
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4 # Updated to v4
         with:
           name: xel-linux-arm64
           path: ./release-assets
       
       - name: Download Windows amd64 binary
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4 # Updated to v4
         with:
           name: xel-windows-amd64
           path: ./release-assets
       
       - name: Download macOS amd64 binary
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4 # Updated to v4
         with:
           name: xel-darwin-amd64
           path: ./release-assets
       
       - name: Download macOS arm64 binary
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4 # Updated to v4
         with:
           name: xel-darwin-arm64
           path: ./release-assets
