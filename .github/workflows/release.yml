@@ -5,55 +5,261 @@ on:
     # Trigger on tag pushes that match v*, e.g., v1.0.0, v20.15.10
     tags:
       - 'v*'
+  # Allow manual triggering for testing
+  workflow_dispatch:
 
 jobs:
-  build:
-    name: Build and Release
+  # Setup job to extract version information
+  setup:
+    name: Setup Build Information
     runs-on: ubuntu-latest
-    permissions:
-      contents: write  # Needed for creating releases
-
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
+      engine_version: ${{ steps.get_version.outputs.engine_version }}
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
           fetch-depth: 0  # Fetch all history for tags
-
+      
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.23.2'  # Updated to match VirtLang-Go requirements
-
-      - name: Extract version from tag
+          go-version: '1.23.2'
+      
+      - name: Extract version information
         id: get_version
         run: |
-          # Remove 'v' prefix from tag name
-          VERSION=${GITHUB_REF#refs/tags/v}
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          if [[ $GITHUB_REF == refs/tags/v* ]]; then
+            # Remove 'v' prefix from tag name
+            VERSION=${GITHUB_REF#refs/tags/v}
+          else
+            # Use Makefile version for non-tag builds
+            VERSION=$(grep VERSION Makefile | cut -d= -f2 | tr -d ' ')
+          fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Building version: $VERSION"
+          
+          # Get engine version
+          ENGINE_VERSION=$(go list -m github.com/dev-kas/virtlang-go/v4 | awk '{print substr($2, 2)}')
+          echo "engine_version=$ENGINE_VERSION" >> $GITHUB_OUTPUT
+          echo "Engine version: $ENGINE_VERSION"
 
+  # Linux amd64 build job
+  build-linux-amd64:
+    name: Build Linux (amd64)
+    needs: setup
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23.2'
+      
       - name: Update dependencies
         run: go mod tidy
-
-      - name: Build for all platforms
+      
+      - name: Build Linux amd64
         run: |
-          # Build for all platforms with version from tag
-          make build VERSION=$VERSION ENGINE_VERSION=$(go list -m github.com/dev-kas/virtlang-go/v4 | awk '{print substr($2, 2)}')
-          
-          # Create directory for release assets
-          mkdir -p release-assets
-          
-          # Copy and rename binaries to include version
-          cp bin/xel-* release-assets/
+          mkdir -p bin
+          make build-linux-amd64 VERSION=${{ needs.setup.outputs.version }} ENGINE_VERSION=${{ needs.setup.outputs.engine_version }}
+      
+      - name: Upload Linux amd64 binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: xel-linux-amd64
+          path: ./bin/xel-linux-amd64
+          retention-days: 1
 
+  # Linux arm64 build job
+  build-linux-arm64:
+    name: Build Linux (arm64)
+    needs: setup
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23.2'
+      
+      - name: Install cross-compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+      
+      - name: Update dependencies
+        run: go mod tidy
+      
+      - name: Build Linux arm64
+        run: |
+          mkdir -p bin
+          make build-linux-arm64 VERSION=${{ needs.setup.outputs.version }} ENGINE_VERSION=${{ needs.setup.outputs.engine_version }}
+      
+      - name: Upload Linux arm64 binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: xel-linux-arm64
+          path: ./bin/xel-linux-arm64
+          retention-days: 1
+
+  # Windows amd64 build job
+  build-windows-amd64:
+    name: Build Windows (amd64)
+    needs: setup
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23.2'
+      
+      - name: Install cross-compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-mingw-w64-x86-64
+      
+      - name: Update dependencies
+        run: go mod tidy
+      
+      - name: Build Windows amd64
+        run: |
+          mkdir -p bin
+          make build-windows-amd64 VERSION=${{ needs.setup.outputs.version }} ENGINE_VERSION=${{ needs.setup.outputs.engine_version }}
+      
+      - name: Upload Windows amd64 binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: xel-windows-amd64
+          path: ./bin/xel-windows-amd64.exe
+          retention-days: 1
+
+  # macOS amd64 build job
+  build-darwin-amd64:
+    name: Build macOS (amd64)
+    needs: setup
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23.2'
+      
+      - name: Update dependencies
+        run: go mod tidy
+      
+      - name: Build macOS amd64
+        run: |
+          mkdir -p bin
+          make build-darwin-amd64 VERSION=${{ needs.setup.outputs.version }} ENGINE_VERSION=${{ needs.setup.outputs.engine_version }}
+      
+      - name: Upload macOS amd64 binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: xel-darwin-amd64
+          path: ./bin/xel-darwin-amd64
+          retention-days: 1
+
+  # macOS arm64 build job
+  build-darwin-arm64:
+    name: Build macOS (arm64)
+    needs: setup
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23.2'
+      
+      - name: Update dependencies
+        run: go mod tidy
+      
+      - name: Build macOS arm64
+        run: |
+          mkdir -p bin
+          make build-darwin-arm64 VERSION=${{ needs.setup.outputs.version }} ENGINE_VERSION=${{ needs.setup.outputs.engine_version }}
+      
+      - name: Upload macOS arm64 binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: xel-darwin-arm64
+          path: ./bin/xel-darwin-arm64
+          retention-days: 1
+
+  # Create release job
+  create-release:
+    name: Create Release
+    needs: [setup, build-linux-amd64, build-linux-arm64, build-windows-amd64, build-darwin-amd64, build-darwin-arm64]
+    runs-on: ubuntu-latest
+    # Only create a release for tag pushes
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write  # Needed for creating releases
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Download Linux amd64 binary
+        uses: actions/download-artifact@v3
+        with:
+          name: xel-linux-amd64
+          path: ./release-assets
+      
+      - name: Download Linux arm64 binary
+        uses: actions/download-artifact@v3
+        with:
+          name: xel-linux-arm64
+          path: ./release-assets
+      
+      - name: Download Windows amd64 binary
+        uses: actions/download-artifact@v3
+        with:
+          name: xel-windows-amd64
+          path: ./release-assets
+      
+      - name: Download macOS amd64 binary
+        uses: actions/download-artifact@v3
+        with:
+          name: xel-darwin-amd64
+          path: ./release-assets
+      
+      - name: Download macOS arm64 binary
+        uses: actions/download-artifact@v3
+        with:
+          name: xel-darwin-arm64
+          path: ./release-assets
+      
+      - name: Prepare release files
+        run: |
+          chmod +x ./release-assets/*
+      
       - name: Create Release
-        id: create_release
         uses: softprops/action-gh-release@v1
         with:
-          name: Xel v${{ steps.get_version.outputs.version }}
+          name: Xel v${{ needs.setup.outputs.version }}
           draft: false
           prerelease: false
           generate_release_notes: true
           files: |
-            release-assets/xel-*
+            ./release-assets/*
