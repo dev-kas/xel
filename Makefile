@@ -6,10 +6,14 @@ test:
 
 # macOS builds
 build-darwin-amd64:
-	GOOS='darwin' GOARCH='amd64' CGO_ENABLED=1 go build -ldflags="-X xel/shared.RuntimeVersion=$(VERSION) -X xel/shared.EngineVersion=$(ENGINE_VERSION)" -o ./bin/xel-darwin-amd64
+	# Note: macOS builds with CGO_ENABLED=1 should be done on macOS machines
+	# For local testing on non-macOS, we'll use CGO_ENABLED=0
+	GOOS='darwin' GOARCH='amd64' CGO_ENABLED=0 go build -ldflags="-X xel/shared.RuntimeVersion=$(VERSION) -X xel/shared.EngineVersion=$(ENGINE_VERSION)" -o ./bin/xel-darwin-amd64
 
 build-darwin-arm64:
-	GOOS='darwin' GOARCH='arm64' CGO_ENABLED=1 go build -ldflags="-X xel/shared.RuntimeVersion=$(VERSION) -X xel/shared.EngineVersion=$(ENGINE_VERSION)" -o ./bin/xel-darwin-arm64
+	# Note: macOS builds with CGO_ENABLED=1 should be done on macOS machines
+	# For local testing on non-macOS, we'll use CGO_ENABLED=0
+	GOOS='darwin' GOARCH='arm64' CGO_ENABLED=0 go build -ldflags="-X xel/shared.RuntimeVersion=$(VERSION) -X xel/shared.EngineVersion=$(ENGINE_VERSION)" -o ./bin/xel-darwin-arm64
 
 build-mac: build-darwin-amd64 build-darwin-arm64
 

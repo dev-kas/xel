@@ -70,7 +70,7 @@ jobs:
           make build-linux-amd64 VERSION=${{ needs.setup.outputs.version }} ENGINE_VERSION=${{ needs.setup.outputs.engine_version }}
       
       - name: Upload Linux amd64 binary
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: xel-linux-amd64
           path: ./bin/xel-linux-amd64
@@ -105,7 +105,7 @@ jobs:
           make build-linux-arm64 VERSION=${{ needs.setup.outputs.version }} ENGINE_VERSION=${{ needs.setup.outputs.engine_version }}
       
       - name: Upload Linux arm64 binary
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: xel-linux-arm64
           path: ./bin/xel-linux-arm64
@@ -140,7 +140,7 @@ jobs:
           make build-windows-amd64 VERSION=${{ needs.setup.outputs.version }} ENGINE_VERSION=${{ needs.setup.outputs.engine_version }}
       
       - name: Upload Windows amd64 binary
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: xel-windows-amd64
           path: ./bin/xel-windows-amd64.exe
@@ -170,7 +170,7 @@ jobs:
           make build-darwin-amd64 VERSION=${{ needs.setup.outputs.version }} ENGINE_VERSION=${{ needs.setup.outputs.engine_version }}
       
       - name: Upload macOS amd64 binary
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: xel-darwin-amd64
           path: ./bin/xel-darwin-amd64
@@ -200,7 +200,7 @@ jobs:
           make build-darwin-arm64 VERSION=${{ needs.setup.outputs.version }} ENGINE_VERSION=${{ needs.setup.outputs.engine_version }}
       
       - name: Upload macOS arm64 binary
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: xel-darwin-arm64
           path: ./bin/xel-darwin-arm64
@@ -221,31 +221,31 @@ jobs:
         uses: actions/checkout@v3
       
       - name: Download Linux amd64 binary
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: xel-linux-amd64
           path: ./release-assets
       
       - name: Download Linux arm64 binary
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: xel-linux-arm64
           path: ./release-assets
       
       - name: Download Windows amd64 binary
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: xel-windows-amd64
           path: ./release-assets
       
       - name: Download macOS amd64 binary
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: xel-darwin-amd64
           path: ./release-assets
       
       - name: Download macOS arm64 binary
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: xel-darwin-arm64
           path: ./release-assets
