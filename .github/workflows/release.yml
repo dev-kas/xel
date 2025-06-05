@@ -145,6 +145,36 @@ jobs:
           name: xel-windows-amd64
           path: ./bin/xel-windows-amd64.exe
           retention-days: 1
+          
+  # Windows arm64 build job
+  build-windows-arm64:
+    name: Build Windows (arm64)
+    needs: setup
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23.2'
+      
+      - name: Update dependencies
+        run: go mod tidy
+      
+      - name: Build Windows arm64
+        run: |
+          mkdir -p bin
+          make build-windows-arm64 VERSION=${{ needs.setup.outputs.version }} ENGINE_VERSION=${{ needs.setup.outputs.engine_version }}
+      
+      - name: Upload Windows arm64 binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: xel-windows-arm64
+          path: ./bin/xel-windows-arm64.exe
+          retention-days: 1
 
   # macOS amd64 build job
   build-darwin-amd64:
@@ -209,7 +239,7 @@ jobs:
   # Create release job
   create-release:
     name: Create Release
-    needs: [setup, build-linux-amd64, build-linux-arm64, build-windows-amd64, build-darwin-amd64, build-darwin-arm64]
+    needs: [setup, build-linux-amd64, build-linux-arm64, build-windows-amd64, build-windows-arm64, build-darwin-amd64, build-darwin-arm64]
     runs-on: ubuntu-latest
     # Only create a release for tag pushes
     if: startsWith(github.ref, 'refs/tags/v')
@@ -236,6 +266,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: xel-windows-amd64
+          path: ./release-assets
+          
+      - name: Download Windows arm64 binary
+        uses: actions/download-artifact@v4
+        with:
+          name: xel-windows-arm64
           path: ./release-assets
       
       - name: Download macOS amd64 binary

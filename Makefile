@@ -30,7 +30,11 @@ build-linux: build-linux-amd64 build-linux-arm64
 build-windows-amd64:
 	CC=x86_64-w64-mingw32-gcc GOOS='windows' GOARCH='amd64' CGO_ENABLED=1 go build -ldflags="-X xel/shared.RuntimeVersion=$(VERSION) -X xel/shared.EngineVersion=$(ENGINE_VERSION)" -o ./bin/xel-windows-amd64.exe
 
-build-windows: build-windows-amd64
+build-windows-arm64:
+	# For Windows ARM64, we'll use CGO_ENABLED=0 since the cross-compiler is not readily available
+	GOOS='windows' GOARCH='arm64' CGO_ENABLED=0 go build -ldflags="-X xel/shared.RuntimeVersion=$(VERSION) -X xel/shared.EngineVersion=$(ENGINE_VERSION)" -o ./bin/xel-windows-arm64.exe
+
+build-windows: build-windows-amd64 build-windows-arm64
 
 # All builds
 build-all: build-mac build-linux build-windows
