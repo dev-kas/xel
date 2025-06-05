@@ -19,14 +19,14 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Fetch all history for tags
       
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
-          go-version: '1.23.2'
+          go-version: '1.24.4'
       
       - name: Extract version information
         id: get_version
@@ -54,12 +54,12 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
-          go-version: '1.23.2'
+          go-version: '1.24.4'
       
       - name: Update dependencies
         run: go mod tidy
@@ -84,12 +84,12 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
-          go-version: '1.23.2'
+          go-version: '1.24.4'
       
       - name: Install cross-compiler
         run: |
@@ -119,12 +119,12 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
-          go-version: '1.23.2'
+          go-version: '1.24.4'
       
       - name: Install cross-compiler
         run: |
@@ -154,12 +154,12 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
-          go-version: '1.23.2'
+          go-version: '1.24.4'
       
       - name: Install cross-compiler
         run: |
@@ -189,12 +189,12 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
-          go-version: '1.23.2'
+          go-version: '1.24.4'
       
       - name: Update dependencies
         run: go mod tidy
@@ -219,12 +219,12 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
-          go-version: '1.23.2'
+          go-version: '1.24.4'
       
       - name: Update dependencies
         run: go mod tidy
@@ -253,7 +253,7 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
       - name: Download Linux amd64 binary
         uses: actions/download-artifact@v4
@@ -291,9 +291,22 @@ jobs:
           name: xel-darwin-arm64
           path: ./release-assets
       
-      - name: Prepare release files
+      - name: Prepare and verify release files
         run: |
           chmod +x ./release-assets/*
+          
+          # Verify all binaries exist
+          echo "Verifying all binaries exist..."
+          for binary in xel-linux-amd64 xel-linux-arm64 xel-windows-amd64.exe xel-windows-arm64.exe xel-darwin-amd64 xel-darwin-arm64; do
+            if [ ! -f "./release-assets/$binary" ]; then
+              echo "Error: $binary is missing!"
+              exit 1
+            else
+              echo "✓ $binary exists"
+              ls -la "./release-assets/$binary"
+            fi
+          done
+          echo "All binaries verified successfully"
       
       - name: Create Release
         uses: softprops/action-gh-release@v1
