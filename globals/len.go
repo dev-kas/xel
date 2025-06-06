@@ -23,7 +23,7 @@ var Len = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environment.
 	result := values.MK_NIL()
 
 	if args[0].Type == shared.String {
-		result = values.MK_NUMBER(float64(len(args[0].Value.(string))) - 2)
+		result = values.MK_NUMBER(float64(len(args[0].Value.(string))))
 	} else {
 		result = values.MK_NUMBER(float64(len(args[0].Value.([]shared.RuntimeValue))))
 	}
