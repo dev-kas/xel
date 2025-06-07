@@ -22,6 +22,7 @@ import (
 	_ "xel/modules/threads"
 	_ "xel/modules/time"
 	_ "xel/modules/native"
+	_ "xel/modules/os"
 
 	"github.com/chzyer/readline"
 	"github.com/dev-kas/virtlang-go/v4/environment"

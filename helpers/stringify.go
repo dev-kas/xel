@@ -128,7 +128,7 @@ func stringifyWithVisited(value shared.RuntimeValue, internal bool, visited map[
 	switch value.Type {
 	case shared.String:
 		if internal {
-			output += fmt.Sprintf("%q", value.Value.(string))
+			output += fmt.Sprintf("\"%s\"", value.Value.(string))
 		} else {
 			output += value.Value.(string)
 		}
@@ -143,9 +143,9 @@ func stringifyWithVisited(value shared.RuntimeValue, internal bool, visited map[
 	case shared.Nil:
 		output += "nil"
 	case shared.Object:
-		output += formatObject(value.Value.(map[string]*shared.RuntimeValue), internal, visited, indentLevel)
+		output += formatObject(value.Value.(map[string]*shared.RuntimeValue), true, visited, indentLevel)
 	case shared.Array:
-		output += formatArray(value.Value.([]shared.RuntimeValue), internal, visited, indentLevel)
+		output += formatArray(value.Value.([]shared.RuntimeValue), true, visited, indentLevel)
 	case shared.Function:
 		output += "<function>"
 	case shared.NativeFN:

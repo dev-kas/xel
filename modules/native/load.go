@@ -2,7 +2,8 @@ package native
 
 import (
 	"fmt"
-
+	"path/filepath"
+	xShared "xel/shared"
 	"github.com/dev-kas/virtlang-go/v4/environment"
 	"github.com/dev-kas/virtlang-go/v4/errors"
 	"github.com/dev-kas/virtlang-go/v4/shared"
@@ -24,7 +25,10 @@ var load = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environment
 
 	path := args[0].Value.(string)
 
-	lib, err := loadLibrary(path)
+	dirname := filepath.Dir(xShared.XelRootDebugger.CurrentFile)
+	libpath := filepath.Join(dirname, path)
+
+	lib, err := loadLibrary(libpath)
 	if err != nil {
 		return nil, &errors.RuntimeError{
 			Message: err.Error(),
@@ -81,7 +85,7 @@ var load = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environment
 		}
 
 		var retVal shared.RuntimeValue
-		
+
 		switch v := res.(type) {
 		case string:
 			retVal = values.MK_STRING(v)

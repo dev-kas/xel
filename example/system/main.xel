@@ -1,0 +1,44 @@
+const os = import("xel:os")
+const time = import("xel:time")
+
+print("CWD:", os.cwd())
+print("Hello,", os.get("USER"))
+print(os.list("../"))
+print(os.exists("../"))
+print(os.read("../system/main.xel"))
+
+os.write("../system/test.xel", "print(\"Hello, World!\")")
+print(os.read("../system/test.xel"))
+
+os.remove("../system/test.xel")
+print(os.exists("../system/test.xel"))
+
+os.mkdir("../system/test")
+print(os.exists("../system/test"))
+
+os.remove("../system/test")
+print(os.exists("../system/test"))
+
+print(os.join("..", "system", "test"))
+print(os.join("..", "system", "test", "test"))
+
+print(os.sep)
+
+print("Running on", os.platform, "(" + os.arch + ")")
+
+print(os.tempdir)
+print(os.user())
+print(os.exec("ls", ["asdf", "-l"]))
+
+os.copy("../system/main.xel", "../system/test.xel")
+print(os.exists("../system/test.xel"), "Should be true")
+print(os.read("../system/test.xel") == os.read("../system/main.xel"), "Should be true")
+
+os.move("../system/test.xel", "../system/test2.xel")
+print(os.exists("../system/test2.xel"), "Should be true")
+print(os.exists("../system/test.xel"), "Should be false")
+
+print("Stats:", os.stat("../system/test2.xel"))
+
+os.remove("../system/test2.xel")
+print(os.exists("../system/test.xel"), "Should be false")
