@@ -1,0 +1,46 @@
+const strings = import("xel:strings")
+const classes = import("xel:classes")
+const array = import("xel:array")
+
+class Person {
+    public name
+    private age
+    
+    public constructor(name_param, age_param) {
+        name = name_param
+        age = age_param
+    }
+    
+    public greet() {
+        print(strings.format("Hello, my name is %v and I'm %v years old.", name, age))
+    }
+    
+    public haveBirthday() {
+        age = age + 1
+        print(strings.format("Happy Birthday! %v is now %v.", name, age))
+    }
+}
+
+const jedi = Person("Jedi", 30)
+jedi.greet()
+jedi.haveBirthday()
+jedi.haveBirthday()
+jedi.greet()
+
+print(classes.instanceOf(Person, jedi))
+
+const PersonClass = classes.getClass(jedi)
+const thanos = PersonClass("Thanos", 1000)
+thanos.greet()
+thanos.haveBirthday()
+thanos.haveBirthday()
+thanos.greet()
+
+print(classes.methods(PersonClass))
+print(classes.properties(PersonClass))
+
+array.forEach(classes.methods(PersonClass), (fn(method) {
+    array.forEach([thanos, jedi], (fn(instance) {
+        instance[method]()
+    }))
+}))

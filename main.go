@@ -23,6 +23,7 @@ import (
 	_ "xel/modules/time"
 	_ "xel/modules/native"
 	_ "xel/modules/os"
+	_ "xel/modules/classes"
 
 	"github.com/chzyer/readline"
 	"github.com/dev-kas/virtlang-go/v4/environment"
@@ -169,7 +170,7 @@ func main() {
 
 	err = app.Run(os.Args)
 	if err != nil {
-		shared.ColorPalette.Error.Printf("Error: %s", err.Error())
+		shared.ColorPalette.Error.Println(err.Error())
 		os.Exit(1)
 	}
 }
