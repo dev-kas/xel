@@ -11,7 +11,7 @@
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}",
-            "args": ["run", "example/parallelism/main.xel"],
+            "args": ["run", "example/box/extended.xel"],
             "console": "integratedTerminal"
         }
     ]
