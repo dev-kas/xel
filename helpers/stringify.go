@@ -4,39 +4,63 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"unsafe"
 
 	"github.com/dev-kas/virtlang-go/v4/shared"
 )
 
+type visitedInfo struct {
+	ID   int
+	Path string
+}
+
 const (
 	maxLineLength = 80
 	itemsPerLine  = 12
+	maxDepth     = 25
 )
 
+// Stringify converts a RuntimeValue to its string representation.
+// The internal parameter controls whether strings should be quoted (true) or not (false).
+// When called internally (from within the interpreter), internal should be true to get quoted strings.
+// When called for user output (like in print statements), internal should be false to get unquoted strings.
 func Stringify(value shared.RuntimeValue, internal bool) string {
-	return stringifyWithVisited(value, internal, make(map[uintptr]bool), 0)
+	// Always pass internal=true for recursive calls to ensure consistent behavior
+	return stringifyWithVisited(value, internal, make(map[uintptr]visitedInfo), 0, "")
 }
 
-func formatObject(obj map[string]*shared.RuntimeValue, internal bool, visited map[uintptr]bool, indentLevel int) string {
+func formatObject(obj map[string]*shared.RuntimeValue, visited map[uintptr]visitedInfo, indentLevel int, path string) string {
 	if len(obj) == 0 {
 		return "{}"
 	}
 
 	indent := strings.Repeat("  ", indentLevel)
-	nextIndent := strings.Repeat("  ", indentLevel+1)
+	nextIndent := indent + "  "
+
+	// Check if we can fit everything on one line
+	onOneLine := true
+	// lineLength tracks the total length of the line
+	// Start with 2 for the opening and closing braces
+	_ = 2 // lineLength is currently unused but kept for future use
 	var items []string
 
-	for key, val := range obj {
-		item := fmt.Sprintf("%s: %s", key, stringifyWithVisited(*val, internal, visited, indentLevel+1))
-		items = append(items, item)
+	for key, value := range obj {
+		itemStr := key + ": " + stringifyWithVisited(*value, true, visited, indentLevel+1, path+"."+key)
+		items = append(items, itemStr)
+		if len(itemStr) > maxLineLength {
+			onOneLine = false
+		}
 	}
 
-	oneLine := "{ " + strings.Join(items, ", ") + " }"
-	if len(oneLine) <= maxLineLength {
-		return oneLine
+	if onOneLine {
+		return "{" + strings.Join(items, ", ") + "}"
 	}
 
-	return "{\n" + nextIndent + strings.Join(items, ",\n"+nextIndent) + "\n" + indent + "}"
+	var lines []string
+	for _, item := range items {
+		lines = append(lines, nextIndent+item)
+	}
+	return "{\n" + strings.Join(lines, ",\n") + "\n" + indent + "}"
 }
 
 func isSimpleValue(value shared.RuntimeValue) bool {
@@ -48,7 +72,7 @@ func isSimpleValue(value shared.RuntimeValue) bool {
 	}
 }
 
-func formatArray(arr []shared.RuntimeValue, internal bool, visited map[uintptr]bool, indentLevel int) string {
+func formatArray(arr []shared.RuntimeValue, visited map[uintptr]visitedInfo, indentLevel int, path string) string {
 	if len(arr) == 0 {
 		return "[]"
 	}
@@ -70,7 +94,7 @@ func formatArray(arr []shared.RuntimeValue, internal bool, visited map[uintptr]b
 			if i > 0 {
 				singleLine += ", "
 			}
-			singleLine += stringifyWithVisited(item, internal, visited, 0)
+			singleLine += stringifyWithVisited(item, true, visited, 0, fmt.Sprintf("%s[%d]", path, i))
 		}
 		singleLine += " ]"
 
@@ -87,7 +111,7 @@ func formatArray(arr []shared.RuntimeValue, internal bool, visited map[uintptr]b
 
 			var lineItems []string
 			for j := i; j < end; j++ {
-				lineItems = append(lineItems, stringifyWithVisited(arr[j], internal, visited, 0))
+				lineItems = append(lineItems, stringifyWithVisited(arr[j], true, visited, 0, fmt.Sprintf("%s[%d]", path, j)))
 			}
 
 			line := nextIndent + strings.Join(lineItems, ", ")
@@ -101,25 +125,59 @@ func formatArray(arr []shared.RuntimeValue, internal bool, visited map[uintptr]b
 	}
 
 	var items []string
-	for _, item := range arr {
-		items = append(items, nextIndent+stringifyWithVisited(item, internal, visited, indentLevel+1))
+	for i, item := range arr {
+		items = append(items, nextIndent+stringifyWithVisited(item, true, visited, indentLevel+1, fmt.Sprintf("%s[%d]", path, i)))
 	}
 	return "[\n" + strings.Join(items, ",\n") + "\n" + indent + "]"
 }
 
-func stringifyWithVisited(value shared.RuntimeValue, internal bool, visited map[uintptr]bool, indentLevel int) string {
+// stringifyWithVisited converts a RuntimeValue to a string, tracking visited references to detect cycles.
+// The internal parameter controls string quoting behavior - when true, strings are quoted.
+func stringifyWithVisited(value shared.RuntimeValue, internal bool, visited map[uintptr]visitedInfo, indentLevel int, path string) string {
+	if indentLevel > maxDepth {
+		return "[Maximum depth exceeded]"
+	}
+
 	if value.Type == shared.Object || value.Type == shared.Array || value.Type == shared.ClassInstance {
 		if value.Value == nil {
 			return "nil"
 		}
-		// Only track pointers for non-nil values that can be addressed
+
 		val := reflect.ValueOf(value.Value)
-		if val.Kind() == reflect.Ptr && !val.IsNil() {
-			ptr := val.Pointer()
-			if visited[ptr] {
-				return "[Circular]"
+		var ptr uintptr
+
+		switch val.Kind() {
+		case reflect.Ptr, reflect.Map, reflect.Slice, reflect.Chan, reflect.Func, reflect.UnsafePointer:
+			if val.IsNil() {
+				break
 			}
-			visited[ptr] = true
+			
+			// For maps, we need to get the pointer to the map header
+			if val.Kind() == reflect.Map {
+				// This gets the underlying map header pointer in a way that's safe for the garbage collector
+				// The map header is guaranteed to be stable for the lifetime of the map
+				ptr = uintptr((*[2]uintptr)(unsafe.Pointer(&value.Value))[1])
+			} else {
+				// For other reference types, we can use the built-in Pointer() method
+				ptr = val.Pointer()
+			}
+			
+			if info, exists := visited[ptr]; exists {
+				// If we've seen this reference before, show where it was first referenced
+				// If the path is the same as the current path, it's a self-reference
+				if info.Path == path || info.Path == "" {
+					return "[Circular *1]"
+				}
+				// For nested objects, show the reference and the path where it was first seen
+				return fmt.Sprintf("[Circular *%d: %s]", info.ID, info.Path)
+			}
+
+			refID := len(visited) + 1
+			// Store the current path with this reference
+			visited[ptr] = visitedInfo{
+				ID:   refID,
+				Path: path,
+			}
 			defer delete(visited, ptr)
 		}
 	}
@@ -127,10 +185,15 @@ func stringifyWithVisited(value shared.RuntimeValue, internal bool, visited map[
 	output := ""
 	switch value.Type {
 	case shared.String:
+		str := value.Value.(string)
 		if internal {
-			output += fmt.Sprintf("\"%s\"", value.Value.(string))
+			// When internal is true, we're being called from within the interpreter
+			// and need to add quotes around strings for proper representation
+			output += fmt.Sprintf("\"%s\"", str)
 		} else {
-			output += value.Value.(string)
+			// When internal is false, this is for user output (like print statements)
+			// so we output the string without quotes
+			output += str
 		}
 	case shared.Number:
 		output += fmt.Sprintf("%g", value.Value.(float64))
@@ -141,11 +204,11 @@ func stringifyWithVisited(value shared.RuntimeValue, internal bool, visited map[
 			output += "false"
 		}
 	case shared.Nil:
-		output += "nil"
+		output = ""
 	case shared.Object:
-		output += formatObject(value.Value.(map[string]*shared.RuntimeValue), true, visited, indentLevel)
+		output = formatObject(value.Value.(map[string]*shared.RuntimeValue), visited, indentLevel, path)
 	case shared.Array:
-		output += formatArray(value.Value.([]shared.RuntimeValue), true, visited, indentLevel)
+		output = formatArray(value.Value.([]shared.RuntimeValue), visited, indentLevel, path)
 	case shared.Function:
 		output += "<function>"
 	case shared.NativeFN:
