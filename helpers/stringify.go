@@ -110,7 +110,7 @@ func formatArray(arr []shared.RuntimeValue, internal bool, visited map[uintptr]b
 func stringifyWithVisited(value shared.RuntimeValue, internal bool, visited map[uintptr]bool, indentLevel int) string {
 	if value.Type == shared.Object || value.Type == shared.Array || value.Type == shared.ClassInstance {
 		if value.Value == nil {
-			return "null"
+			return "nil"
 		}
 		// Only track pointers for non-nil values that can be addressed
 		val := reflect.ValueOf(value.Value)

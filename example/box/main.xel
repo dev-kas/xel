@@ -1,0 +1,21 @@
+const object = import("xel:object")
+const array = import("xel:array")
+const string = import("xel:strings")
+
+let myObject = object.create()
+
+print(myObject)
+
+object.set(myObject, "hello", "world")
+print(object.get(myObject, "hello"))
+print(object.keys(myObject))
+print(object.values(myObject))
+object.delete(myObject, "hello")
+print(object.get(myObject, "hello"))
+print(myObject)
+
+array.forEach(array.create(10, nil), (fn(_, i) {
+	object.set(myObject, string.format("%v", i), i)
+}))
+
+print(myObject)

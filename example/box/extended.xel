@@ -1,0 +1,34 @@
+const object = import("xel:object")
+
+let defaultSettings = object.create({
+    width: 800,
+    height: 600,
+    title: "My Box",
+    backgroundColor: "#000"
+})
+
+let settings = object.merge(defaultSettings, {
+    width: 1280,
+    height: 720,
+})
+
+print(object.has(settings, "title"))
+print(settings)
+
+let new = object.clone(settings)
+new.title = "New Box"
+print(new, settings)
+
+print(object.pick(new, ["title", "backgroundColor"]))
+print(object.omit(new, ["title", "backgroundColor"]))
+
+print(object.entries(settings))
+print(object.isEmpty(settings)) // false
+print(object.isEmpty({})) // true
+print(object.equal(settings, settings)) // true
+print(object.equal(settings, defaultSettings)) // false
+
+let cycle = object.create()
+object.set(cycle, "self", cycle)
+print(cycle)
+

@@ -1,0 +1,11 @@
+{
+  "name": "box",
+  "description": "This example demonstrates the core features of the `xel:object` module.",
+  "version": "0.1.0",
+  "xel": "^0.13.0",
+  "engine": "^4.0.0",
+  "main": "main.xel",
+  "deps": {},
+  "author": "dev-kas",
+  "license": "MIT"
+}

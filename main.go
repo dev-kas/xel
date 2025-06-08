@@ -24,6 +24,7 @@ import (
 	_ "xel/modules/native"
 	_ "xel/modules/os"
 	_ "xel/modules/classes"
+	_ "xel/modules/object"
 
 	"github.com/chzyer/readline"
 	"github.com/dev-kas/virtlang-go/v4/environment"

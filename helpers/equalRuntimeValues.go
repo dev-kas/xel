@@ -63,8 +63,8 @@ func EqualRuntimeValues(a, b *shared.RuntimeValue) bool {
 
 	case shared.Object:
 		// Compare object properties
-		aObj, aOk := a.Value.(map[string]shared.RuntimeValue)
-		bObj, bOk := b.Value.(map[string]shared.RuntimeValue)
+		aObj, aOk := a.Value.(map[string]*shared.RuntimeValue)
+		bObj, bOk := b.Value.(map[string]*shared.RuntimeValue)
 		if !aOk || !bOk {
 			return false
 		}
@@ -82,7 +82,7 @@ func EqualRuntimeValues(a, b *shared.RuntimeValue) bool {
 			}
 
 			// Recursively compare property values
-			if !EqualRuntimeValues(&aVal, &bVal) {
+			if !EqualRuntimeValues(aVal, bVal) {
 				return false
 			}
 		}
