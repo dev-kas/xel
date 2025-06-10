@@ -7,7 +7,7 @@ require (
 	github.com/chzyer/readline v1.5.1
 	github.com/dev-kas/virtlang-go/v4 v4.0.0
 	github.com/fatih/color v1.18.0
-	github.com/go-git/go-git/v5 v5.16.1
+	github.com/go-git/go-git/v5 v5.16.2
 	github.com/urfave/cli/v2 v2.27.6
 )
 
