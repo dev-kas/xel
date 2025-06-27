@@ -3,7 +3,7 @@ module xel
 go 1.23.2
 
 require (
-	github.com/Masterminds/semver/v3 v3.3.1
+	github.com/Masterminds/semver/v3 v3.4.0
 	github.com/chzyer/readline v1.5.1
 	github.com/dev-kas/virtlang-go/v4 v4.0.1
 	github.com/fatih/color v1.18.0
