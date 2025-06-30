@@ -11,7 +11,8 @@
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}",
-            "args": ["run", "example/box/extended.xel"],
+            "cwd": "${workspaceFolder}/rxp",
+            "args": ["pkg", "add", "levenshtein"],
             "console": "integratedTerminal"
         }
     ]

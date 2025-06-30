@@ -150,11 +150,11 @@ func GetVersions(moduleName string) map[*semver.Version]VersionData {
 }
 
 // DownloadModuleGit takes a module git url and attempts to fetch and download a version satisfying the constraint
-func DownloadModuleGit(url string, constraint string) (*shared.ProjectManifest, error) {
+func DownloadModuleGit(url string, constraint string) (string, *shared.ProjectManifest, error) {
 	// First we create a temp dir to clone the repo
 	tmpDir, err := os.MkdirTemp("", "xel-module-*")
 	if err != nil {
-		return nil, err
+		return "", nil, err
 	}
 
 	defer os.RemoveAll(tmpDir)
@@ -169,13 +169,13 @@ func DownloadModuleGit(url string, constraint string) (*shared.ProjectManifest, 
 		Progress:   nil,
 	})
 	if err != nil {
-		return nil, err
+		return "", nil, err
 	}
 
 	// list the all tags
 	tags, err := repo.Tags()
 	if err != nil {
-		return nil, err
+		return "", nil, err
 	}
 
 	// collect valid tags
@@ -200,12 +200,12 @@ func DownloadModuleGit(url string, constraint string) (*shared.ProjectManifest, 
 		return nil
 	})
 	if err != nil {
-		return nil, err
+		return "", nil, err
 	}
 
 	if len(validTags) == 0 {
 		// Oops, no valid tags found
-		return nil, fmt.Errorf("no valid semver tags found")
+		return "", nil, fmt.Errorf("no valid semver tags found")
 	}
 
 	// sort tags descending (newer first)
@@ -215,7 +215,7 @@ func DownloadModuleGit(url string, constraint string) (*shared.ProjectManifest, 
 	// actually, lets first parse the constraint
 	versionConstraint, err := semver.NewConstraint(constraint)
 	if err != nil {
-		return nil, err
+		return "", nil, err
 	}
 
 	// finally lets check it...
@@ -232,7 +232,7 @@ func DownloadModuleGit(url string, constraint string) (*shared.ProjectManifest, 
 
 			// create the dirs
 			if err := os.MkdirAll(dest, 0755); err != nil {
-				return nil, err
+				return "", nil, err
 			}
 
 			// clone ONLY the this specific tag
@@ -329,11 +329,11 @@ func DownloadModuleGit(url string, constraint string) (*shared.ProjectManifest, 
 			}
 
 			// finally, we return the manifest
-			return &manifest, nil
+			return manifestPath, &manifest, nil
 		}
 	}
 
-	return nil, fmt.Errorf("no valid version found that satisfies the constraint")
+	return "", nil, fmt.Errorf("no valid version found that satisfies the constraint")
 }
 
 type RegistryPackageResp struct {
@@ -395,31 +395,31 @@ type RegistryTarballMetadataResp struct {
 }
 
 
-func DownloadModuleOnline(moduleName string, constraint string) (*shared.ProjectManifest, string, string, string, error) {
+func DownloadModuleOnline(moduleName string, constraint string) (string, *shared.ProjectManifest, string, string, string, error) {
 	// Fetch the package details from the registry
 	resp, err := http.Get(fmt.Sprintf("%s%s%s", shared.XelConfig.PackageRegistryURI, "packages/name/", moduleName))
 	if err != nil {
-		return nil, "", "", "", err
+		return "", nil, "", "", "", err
 	}
 	defer resp.Body.Close()
 	
 	// Parse the response body
 	var packageDetails RegistryPackageResp
 	if err := json.NewDecoder(resp.Body).Decode(&packageDetails); err != nil {
-		return nil, "", "", "", err
+		return "", nil, "", "", "", err
 	}
 
 	// fetch the package versions from the registry
 	resp, err = http.Get(fmt.Sprintf("%s%s%d?limit=100&offset=0", shared.XelConfig.PackageRegistryURI, "versions/pkg/", packageDetails.ID))
 	if err != nil {
-		return nil, "", "", "", err
+		return "", nil, "", "", "", err
 	}
 	defer resp.Body.Close()
 	
 	// Parse the response body
 	var versions RegistryPackageVersionResp
 	if err := json.NewDecoder(resp.Body).Decode(&versions); err != nil {
-		return nil, "", "", "", err
+		return "", nil, "", "", "", err
 	}
 	
 	// Sort it in descending order (new -> old)
@@ -444,12 +444,12 @@ func DownloadModuleOnline(moduleName string, constraint string) (*shared.Project
 	for _, v := range versions.Versions {
 		constraint, err := semver.NewConstraint(constraint)
 		if err != nil {
-			return nil, "", "", "", err
+			return "", nil, "", "", "", err
 		}
 
 		version, err := semver.NewVersion(v.Version)
 		if err != nil {
-			return nil, "", "", "", err
+			return "", nil, "", "", "", err
 		}
 
 		if constraint.Check(version) {
@@ -459,66 +459,66 @@ func DownloadModuleOnline(moduleName string, constraint string) (*shared.Project
 	}
 
 	if targetVersion.ID == -1 {
-		return nil, "", "", "", fmt.Errorf("no version found that satisfies the constraint %s for package %s", constraint, moduleName)
+		return "", nil, "", "", "", fmt.Errorf("no version found that satisfies the constraint %s for package %s", constraint, moduleName)
 	}
 
 	// download the tarball metadata specific to that version constraint
 	resp, err = http.Get(fmt.Sprintf("%s%s%d?limit=1&offset=0", shared.XelConfig.PackageRegistryURI, "tarballs/ver/", targetVersion.ID))
 	if err != nil {
-		return nil, "", "", "", err
+		return "", nil, "", "", "", err
 	}
 	defer resp.Body.Close()
 	
 	// Parse the response body
 	var tarballMetadata RegistryTarballMetadataResp
 	if err := json.NewDecoder(resp.Body).Decode(&tarballMetadata); err != nil {
-		return nil, "", "", "", err
+		return "", nil, "", "", "", err
 	}
 
 	if len(tarballMetadata.Tarballs) == 0 {
-		return nil, "", "", "", fmt.Errorf("no tarballs found for version %s", constraint)
+		return "", nil, "", "", "", fmt.Errorf("no tarballs found for version %s", constraint)
 	}
 
-	manifest, err := DownloadFromTarball(tarballMetadata.Tarballs[0].URL, tarballMetadata.Tarballs[0].Integrity.Algorithm, tarballMetadata.Tarballs[0].Integrity.Hash, moduleName, targetVersion.Version)
+	manifestPath, manifest, err := DownloadFromTarball(tarballMetadata.Tarballs[0].URL, tarballMetadata.Tarballs[0].Integrity.Algorithm, tarballMetadata.Tarballs[0].Integrity.Hash, moduleName, targetVersion.Version)
 	if err != nil {
-		return nil, "", "", "", err
+		return "", nil, "", "", "", err
 	}
 	
-	return manifest, tarballMetadata.Tarballs[0].Integrity.Algorithm, tarballMetadata.Tarballs[0].Integrity.Hash, tarballMetadata.Tarballs[0].URL, nil
+	return manifestPath, manifest, tarballMetadata.Tarballs[0].Integrity.Algorithm, tarballMetadata.Tarballs[0].Integrity.Hash, tarballMetadata.Tarballs[0].URL, nil
 }
 
-func DownloadFromTarball(url, algorithm, hash, name, version string) (*shared.ProjectManifest, error) {
+func DownloadFromTarball(url, algorithm, hash, name, version string) (string, *shared.ProjectManifest, error) {
 	tempDir, err := os.MkdirTemp("", "xel-module-*")
 	if err != nil {
-		return nil, err
+		return "", nil, err
 	}
 	defer os.RemoveAll(tempDir)
 
 	// download the tarball
 	resp, err := http.Get(url)
 	if err != nil {
-		return nil, err
+		return "", nil, err
 	}
 	defer resp.Body.Close()
 	
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to download tarball: %s", resp.Status)
+		return "", nil, fmt.Errorf("failed to download tarball: %s", resp.Status)
 	}
 
 	out, err := os.Create(filepath.Join(tempDir, "tarball.tar.gz"))
 	if err != nil {
-		return nil, err
+		return "", nil, err
 	}
 	defer out.Close()
 	
 	if _, err := io.Copy(out, resp.Body); err != nil {
-		return nil, err
+		return "", nil, err
 	}
 
 	// verify integrity
 	err = VerifyTarballIntegrity(filepath.Join(tempDir, "tarball.tar.gz"), algorithm, hash)
 	if err != nil {
-		return nil, err
+		return "", nil, err
 	}
 
 	// prepare destination for package download
@@ -529,30 +529,30 @@ func DownloadFromTarball(url, algorithm, hash, name, version string) (*shared.Pr
 	
 	err = os.MkdirAll(dest, 0755)
 	if err != nil {
-		return nil, err
+		return "", nil, err
 	}
 
 	// extract the tarball
 	if err := ExtractTarGz(filepath.Join(tempDir, "tarball.tar.gz"), dest); err != nil {
-		return nil, err
+		return "", nil, err
 	}
 
 	// read the manifest
 	manifestPath := filepath.Join(dest, "xel.json")
 	manifestBytes, err := os.ReadFile(manifestPath)
 	if err != nil {
-		return nil, err
+		return "", nil, err
 	}
 
 	manifest := &shared.ProjectManifest{}
 	if err := json.Unmarshal(manifestBytes, manifest); err != nil {
-		return nil, err
+		return "", nil, err
 	}
 
-	return manifest, nil
+	return manifestPath, manifest, nil
 }
 
-func DownloadModule(moduleName string, version string, lockfile *shared.Lockfile) (*shared.ProjectManifest, error) {
+func DownloadModule(moduleName string, version string, lockfile *shared.Lockfile) (string, *shared.ProjectManifest, error) {
 	ver := version
 	ver = strings.TrimSpace(ver)
 	ver = strings.ToLower(ver)
@@ -577,15 +577,16 @@ func DownloadModule(moduleName string, version string, lockfile *shared.Lockfile
 		return DownloadFromTarball(url, lockedModule.Algorithm, lockedModule.Hash, moduleName, lockedModule.Version)
 	}
 
+	var manifestPath string
 	var manifest *shared.ProjectManifest
 	var iAlgo string
 	var iHash string
 	var url string
 	var err error
 	if strings.HasPrefix(moduleName, "git+") {
-		manifest, err = DownloadModuleGit(moduleName[4:], ver)
+		manifestPath, manifest, err = DownloadModuleGit(moduleName[4:], ver)
 	} else {
-		manifest, iAlgo, iHash, url, err = DownloadModuleOnline(moduleName, ver)
+		manifestPath, manifest, iAlgo, iHash, url, err = DownloadModuleOnline(moduleName, ver)
 		if err == nil {
 			if lockfile != nil {
 				(*lockfile)[moduleName] = struct{Algorithm string "json:\"algorithm\""; Hash string "json:\"hash\""; URL string "json:\"url\""; Version string "json:\"version\""}{
@@ -598,5 +599,5 @@ func DownloadModule(moduleName string, version string, lockfile *shared.Lockfile
 		}
 	}
 	
-	return manifest, err
+	return manifestPath, manifest, err
 }

@@ -8,6 +8,7 @@ import (
 	"strings"
 	"xel/helpers"
 	"xel/shared"
+	"os/exec"
 
 	"github.com/urfave/cli/v2"
 )
@@ -112,7 +113,7 @@ func PackageCommands() *cli.Command {
 							}
 
 							// download the package
-							manifest, err := helpers.DownloadModule(name, version, &lockfile)
+							manifestPath, manifest, err := helpers.DownloadModule(name, version, &lockfile)
 							if err != nil {
 								return err
 							}
@@ -127,6 +128,25 @@ func PackageCommands() *cli.Command {
 							}
 							if err := os.WriteFile(mainManifestPath, manifestData, 0644); err != nil {
 								return err
+							}
+
+							for depName, depVersion := range *manifest.Deps {
+								exePath, err := os.Executable()
+								if err != nil {
+									return err
+								}
+								xelPath, err := filepath.EvalSymlinks(exePath)
+								if err != nil {
+									return err
+								}
+								
+								cmd := exec.Command(xelPath, "pkg", "add", fmt.Sprintf("%s@%s", depName, depVersion))
+								cmd.Stderr = os.Stderr
+								cmd.Stdout = os.Stdout
+								cmd.Dir = filepath.Dir(manifestPath)
+								if err := cmd.Run(); err != nil {
+									return err
+								}
 							}
 							
 							shared.ColorPalette.Info.Printf("Package `%s@%s` installed\n", name, manifest.Version)
