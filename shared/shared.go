@@ -82,6 +82,13 @@ type ProjectManifest struct {
 	Deprecated  *string            `json:"deprecated,omitempty"` // Project deprecation message
 }
 
+type Lockfile map[string]struct {
+	Algorithm string `json:"algorithm"` // Algorithm used for hashing
+	Hash      string `json:"hash"`      // Hash of the file
+	URL       string `json:"url"`       // URL of the file
+	Version   string `json:"version"`   // Version of the package
+}
+
 // XelConfig holds the application configuration
 var XelConfig Config
 

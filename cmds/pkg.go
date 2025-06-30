@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"xel/helpers"
 	"xel/shared"
@@ -34,53 +35,88 @@ func PackageCommands() *cli.Command {
 						return err
 					}
 
-					// Validate package name
-					for i := 0; i < c.Args().Len(); i++ {
-						packageName := c.Args().Get(i)
-						if packageName == "" {
-							return fmt.Errorf("package name is required")
+					// Lockfile integration
+					lockfilePath := filepath.Join(filepath.Dir(mainManifestPath), "xel.lock")
+					lockfileData, err := os.ReadFile(lockfilePath)
+					if err != nil {
+						if !os.IsNotExist(err) {
+							return err
 						}
+						lockfileData = []byte("{}")
+					}
+					var lockfile shared.Lockfile
+					if err := json.Unmarshal(lockfileData, &lockfile); err != nil {
+						return err
+					}
 
-						// Split package name and version if provided
-						split := strings.Split(packageName, "@")
-						if len(split) > 2 {
-							return fmt.Errorf("invalid package format: %s", packageName)
-						}
-
-						var name, version string
-						switch len(split) {
-						case 0:
-							return fmt.Errorf("invalid package format: %s", packageName)
-						case 1:
-							name = strings.Join(split, "@")
-							version = "*"
-							if mainManifest.Deps != nil {
-								if ver, ok := (*mainManifest.Deps)[name]; ok {
-									version = ver
-								}
+					err = func() error {
+						for i := 0; i < c.Args().Len(); i++ {
+							// Validate package name
+							packageName := c.Args().Get(i)
+							if packageName == "" {
+								return fmt.Errorf("package name is required")
 							}
 
-						default:
-							name = strings.Join(split[:len(split)-1], "@")
-							version = split[len(split)-1]
-						}
+							// Split package name and version if provided
+							split := strings.Split(packageName, "@")
+							if len(split) > 2 {
+								return fmt.Errorf("invalid package format: %s", packageName)
+							}
 
-						// Validate name
-						if len(strings.TrimSpace(name)) == 0 {
-							return fmt.Errorf("package name is required")
-						}
+							var name, version string
+							switch len(split) {
+							case 0:
+								return fmt.Errorf("invalid package format: %s", packageName)
+							case 1:
+								name = strings.Join(split, "@")
+								version = "*"
+								if mainManifest.Deps != nil {
+									if ver, ok := (*mainManifest.Deps)[name]; ok {
+										version = ver
+									}
+								}
 
-						// Check if an installed package satisfies the requirements
-						versions := helpers.GetVersions(name)
+							default:
+								name = strings.Join(split[:len(split)-1], "@")
+								version = split[len(split)-1]
+							}
 
-						if len(versions) != 0 && len(version) != 0 && version != "latest" {
-							_, manifest, err := helpers.ResolveModuleLocal(name, version)
+							// Validate name
+							if len(strings.TrimSpace(name)) == 0 {
+								return fmt.Errorf("package name is required")
+							}
+
+							// Check if an installed package satisfies the requirements
+							versions := helpers.GetVersions(name)
+
+							if len(versions) != 0 && len(version) != 0 && version != "latest" {
+								_, manifest, err := helpers.ResolveModuleLocal(name, version)
+								if err != nil {
+									return err
+								}
+
+								shared.ColorPalette.Warning.Printf("Package `%s@%s` already installed\n", name, manifest.Version)
+
+								if mainManifest.Deps == nil {
+									mainManifest.Deps = &map[string]string{}
+								}
+								(*mainManifest.Deps)[manifest.Name] = manifest.Version
+								manifestData, err := json.MarshalIndent(mainManifest, "", "  ")
+								if err != nil {
+									return err
+								}
+								if err := os.WriteFile(mainManifestPath, manifestData, 0644); err != nil {
+									return err
+								}
+								return nil
+							}
+
+							// download the package
+							manifest, err := helpers.DownloadModule(name, version, &lockfile)
 							if err != nil {
 								return err
 							}
-
-							shared.ColorPalette.Warning.Printf("Package `%s@%s` already installed\n", name, manifest.Version)
-
+							
 							if mainManifest.Deps == nil {
 								mainManifest.Deps = &map[string]string{}
 							}
@@ -92,28 +128,22 @@ func PackageCommands() *cli.Command {
 							if err := os.WriteFile(mainManifestPath, manifestData, 0644); err != nil {
 								return err
 							}
-							return nil
+							
+							shared.ColorPalette.Info.Printf("Package `%s@%s` installed\n", name, manifest.Version)
 						}
+						return nil
+					}()
+					if err != nil {
+						return err
+					}
 
-						// download the package
-						manifest, err := helpers.DownloadModule(name, version)
-						if err != nil {
-							return err
-						}
-						
-						if mainManifest.Deps == nil {
-							mainManifest.Deps = &map[string]string{}
-						}
-						(*mainManifest.Deps)[manifest.Name] = manifest.Version
-						manifestData, err := json.MarshalIndent(mainManifest, "", "  ")
-						if err != nil {
-							return err
-						}
-						if err := os.WriteFile(mainManifestPath, manifestData, 0644); err != nil {
-							return err
-						}
-						
-						shared.ColorPalette.Info.Printf("Package `%s@%s` installed\n", name, manifest.Version)
+					// update lockfile
+					lockfileData, err = json.MarshalIndent(lockfile, "", "  ")
+					if err != nil {
+						return err
+					}
+					if err := os.WriteFile(lockfilePath, lockfileData, 0644); err != nil {
+						return err
 					}
 					return nil
 				},
