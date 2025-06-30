@@ -4,6 +4,8 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"sort"
@@ -20,9 +22,9 @@ type VersionData struct {
 	manifest     *shared.ProjectManifest
 }
 
-// ResolveModule takes a module name and attempts to find it in the configured module paths
+// ResolveModuleLocal takes a module name and attempts to find it in the configured module paths
 // It returns the path to the module's manifest, the manifest itself and an error if the module is not found
-func ResolveModule(moduleName string, constraint string) (string, *shared.ProjectManifest, error) {
+func ResolveModuleLocal(moduleName string, constraint string) (string, *shared.ProjectManifest, error) {
 	// Convert constraint to semver constraint
 	versionConstraint, err := semver.NewConstraint(constraint)
 	if err != nil {
@@ -147,8 +149,8 @@ func GetVersions(moduleName string) map[*semver.Version]VersionData {
 	return collectedVersions
 }
 
-// ResolveOnline takes a module git url and attempts to fetch and download a version satisfying the constraint
-func ResolveOnline(url string, constraint string) (*shared.ProjectManifest, error) {
+// DownloadModuleGit takes a module git url and attempts to fetch and download a version satisfying the constraint
+func DownloadModuleGit(url string, constraint string) (*shared.ProjectManifest, error) {
 	// First we create a temp dir to clone the repo
 	tmpDir, err := os.MkdirTemp("", "xel-module-*")
 	if err != nil {
@@ -276,7 +278,7 @@ func ResolveOnline(url string, constraint string) (*shared.ProjectManifest, erro
 
 			// we also need to verify that this package version is compatible with the current version of xel
 			if shared.RuntimeVersion != "" { // Xel is not in development mode
-				constraint, err := semver.NewConstraint(manifest.Xel)
+				constraint, err := semver.NewConstraint(*manifest.Xel)
 				if err != nil {
 					shared.ColorPalette.Warning.Printf("Invalid Xel version constraint in manifest: %v\n", err)
 					os.RemoveAll(dest)
@@ -291,7 +293,7 @@ func ResolveOnline(url string, constraint string) (*shared.ProjectManifest, erro
 				}
 
 				if !constraint.Check(runtimeVersion) {
-					shared.ColorPalette.Warning.Printf("Xel version %s does not satisfy required version %s from xel.json, please upgrade your runtime\n", shared.RuntimeVersion, manifest.Xel)
+					shared.ColorPalette.Warning.Printf("Xel version %s does not satisfy required version %s from xel.json, please upgrade your runtime\n", shared.RuntimeVersion, *manifest.Xel)
 					os.RemoveAll(dest)
 					continue
 				}
@@ -302,7 +304,7 @@ func ResolveOnline(url string, constraint string) (*shared.ProjectManifest, erro
 
 			// we also need to verify that this package version is compatible with the current version of engine
 			if shared.EngineVersion != "" { // Engine is not in development mode
-				constraint, err := semver.NewConstraint(manifest.Engine)
+				constraint, err := semver.NewConstraint(*manifest.Engine)
 				if err != nil {
 					shared.ColorPalette.Warning.Printf("Invalid engine version constraint in manifest: %v\n", err)
 					os.RemoveAll(dest)
@@ -317,7 +319,7 @@ func ResolveOnline(url string, constraint string) (*shared.ProjectManifest, erro
 				}
 
 				if !constraint.Check(engineVersion) {
-					shared.ColorPalette.Warning.Printf("Engine version %s does not satisfy required version %s from xel.json, please upgrade your engine\n", shared.EngineVersion, manifest.Engine)
+					shared.ColorPalette.Warning.Printf("Engine version %s does not satisfy required version %s from xel.json, please upgrade your engine\n", shared.EngineVersion, *manifest.Engine)
 					os.RemoveAll(dest)
 					continue
 				}
@@ -332,4 +334,234 @@ func ResolveOnline(url string, constraint string) (*shared.ProjectManifest, erro
 	}
 
 	return nil, fmt.Errorf("no valid version found that satisfies the constraint")
+}
+
+type RegistryPackageResp struct {
+	ID int `json:"id"`
+	GID int `json:"gid"`
+	Name string `json:"name"`
+	Latest int `json:"latest"`
+	Description string `json:"description"`
+	Author string `json:"author"`
+	RepoName string `json:"repo_name"`
+	RepoURL string `json:"url"`
+	MirrorURL string `json:"mirror"`
+	Tags []string `json:"tags"`
+	IsDeprecated bool `json:"isDeprecated"`
+	DeprecationReason string `json:"deprecatedReason"`
+}
+
+type RegistryPackageVersionRespMetadata struct {
+	Semver struct {
+		Major int `json:"major"`
+		Minor int `json:"minor"`
+		Patch int `json:"patch"`
+	} `json:"semver"`
+	Version string `json:"version"`
+	Package int `json:"package"`
+	Downloads int `json:"downloads"`
+	License string `json:"license"`
+	DistMode string `json:"dist_mode"`
+	Xel string `json:"xel"`
+	Engine string `json:"engine"`
+	ID int `json:"id"`
+	GID int `json:"gid"`
+}
+
+type RegistryPackageVersionResp struct {
+	Versions []RegistryPackageVersionRespMetadata
+	Total int `json:"total"`
+	Limit int `json:"limit"`
+	Offset int `json:"offset"`
+}
+
+type RegistryTarballMetadataResp struct {
+	Tarballs []struct {
+		Integrity struct {
+			Algorithm string `json:"algorithm"`
+			Hash      string `json:"hash"`
+		} `json:"integrity"`
+		Package int `json:"package"`
+		Version int `json:"version"`
+		URL     string `json:"url"`
+		SizeBytes int `json:"size_bytes"`
+		ID        int `json:"id"`
+		GID       int `json:"gid"`
+		Downloads int `json:"downloads"`
+	} `json:"tarballs"`
+	Total  int `json:"total"`
+	Limit  int `json:"limit"`
+	Offset int `json:"offset"`
+}
+
+
+func DownloadModuleOnline(moduleName string, constraint string) (*shared.ProjectManifest, error) {
+	// Fetch the package details from the registry
+	resp, err := http.Get(fmt.Sprintf("%s%s%s", shared.XelConfig.PackageRegistryURI, "packages/name/", moduleName))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	
+	// Parse the response body
+	var packageDetails RegistryPackageResp
+	if err := json.NewDecoder(resp.Body).Decode(&packageDetails); err != nil {
+		return nil, err
+	}
+
+	// fetch the package versions from the registry
+	resp, err = http.Get(fmt.Sprintf("%s%s%d?limit=100&offset=0", shared.XelConfig.PackageRegistryURI, "versions/pkg/", packageDetails.ID))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	
+	// Parse the response body
+	var versions RegistryPackageVersionResp
+	if err := json.NewDecoder(resp.Body).Decode(&versions); err != nil {
+		return nil, err
+	}
+	
+	// Sort it in descending order (new -> old)
+	sort.Slice(versions.Versions, func(i, j int) bool {
+		a := versions.Versions[i].Semver
+		b := versions.Versions[j].Semver
+
+		if a.Major != b.Major {
+			return a.Major > b.Major
+		}
+		if a.Minor != b.Minor {
+			return a.Minor > b.Minor
+		}
+		return a.Patch > b.Patch
+	})
+
+	// find the version that satisfies the constraint
+	// targetVersion := versions.Versions[0]
+	targetVersion := RegistryPackageVersionRespMetadata{
+		ID: -1,
+	}
+	for _, v := range versions.Versions {
+		constraint, err := semver.NewConstraint(constraint)
+		if err != nil {
+			return nil, err
+		}
+
+		version, err := semver.NewVersion(v.Version)
+		if err != nil {
+			return nil, err
+		}
+
+		if constraint.Check(version) {
+			targetVersion = v
+			break
+		}
+	}
+
+	if targetVersion.ID == -1 {
+		return nil, fmt.Errorf("no version found that satisfies the constraint %s for package %s", constraint, moduleName)
+	}
+
+	// download the tarball metadata specific to that version constraint
+	resp, err = http.Get(fmt.Sprintf("%s%s%d?limit=1&offset=0", shared.XelConfig.PackageRegistryURI, "tarballs/ver/", targetVersion.ID))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	
+	// Parse the response body
+	var tarballMetadata RegistryTarballMetadataResp
+	if err := json.NewDecoder(resp.Body).Decode(&tarballMetadata); err != nil {
+		return nil, err
+	}
+
+	if len(tarballMetadata.Tarballs) == 0 {
+		return nil, fmt.Errorf("no tarballs found for version %s", constraint)
+	}
+
+	// download the tarball in a temp dir
+	tempDir, err := os.MkdirTemp("", "xel-module-*")
+	if err != nil {
+		return nil, err
+	}
+	defer os.RemoveAll(tempDir)
+
+	// download the tarball
+	resp, err = http.Get(tarballMetadata.Tarballs[0].URL)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to download tarball: %s", resp.Status)
+	}
+
+	tarballPath := filepath.Join(tempDir, "tarball.tar.gz")
+	out, err := os.Create(tarballPath)
+	if err != nil {
+		return nil, err
+	}
+	defer out.Close()
+	
+	if _, err := io.Copy(out, resp.Body); err != nil {
+		return nil, err
+	}
+
+	// verify integrity
+	err = VerifyTarballIntegrity(tarballPath, tarballMetadata.Tarballs[0].Integrity.Algorithm, tarballMetadata.Tarballs[0].Integrity.Hash)
+	if err != nil {
+		return nil, err
+	}
+
+	// prepare destination for package download
+	dest := filepath.Join(shared.XelConfig.ModulePaths[0],
+		// the format of this is mod-[hash of name]/[version]
+		// this kinda keeps uniqueness but still, its not the best option i could opt for...
+		fmt.Sprintf("mod-%x", sha256.Sum256([]byte(packageDetails.Name))), targetVersion.Version)
+	
+	err = os.MkdirAll(dest, 0755)
+	if err != nil {
+		return nil, err
+	}
+
+	// extract the tarball
+	if err := ExtractTarGz(tarballPath, dest); err != nil {
+		return nil, err
+	}
+
+	// read the manifest
+	manifestPath := filepath.Join(dest, "xel.json")
+	manifestBytes, err := os.ReadFile(manifestPath)
+	if err != nil {
+		return nil, err
+	}
+
+	manifest := &shared.ProjectManifest{}
+	if err := json.Unmarshal(manifestBytes, manifest); err != nil {
+		return nil, err
+	}
+	
+	return manifest, nil
+}
+
+func DownloadModule(moduleName string, version string) (*shared.ProjectManifest, error) {
+	ver := version
+	ver = strings.TrimSpace(ver)
+	ver = strings.ToLower(ver)
+
+	versionAliasTable := map[string]string{
+		"latest": ">= 0.0.0",
+		"stable": ">= 1.0.0",
+		"any": "*",
+	}
+
+	if _, ok := versionAliasTable[ver]; ok {
+		ver = versionAliasTable[ver]
+	}
+
+	if strings.HasPrefix(moduleName, "git+") {
+		return DownloadModuleGit(moduleName[4:], ver)
+	}
+	return DownloadModuleOnline(moduleName, ver)
 }

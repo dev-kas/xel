@@ -94,7 +94,7 @@ func InitCommand() *cli.Command {
 			// Define questionnaire for project manifest
 			manifest := shared.ProjectManifest{
 				Name: templateName, // Default to template name
-				Deps: make(map[string]string),
+				Deps: &map[string]string{},
 			}
 
 			type extras struct {
@@ -198,8 +198,8 @@ func InitCommand() *cli.Command {
 				existingManifest.License = manifest.License
 			}
 
-			existingManifest.Xel = fmt.Sprintf("^%s", shared.RuntimeVersion)
-			existingManifest.Engine = fmt.Sprintf("^%s", shared.EngineVersion)
+			(*existingManifest.Xel) = fmt.Sprintf("^%s", shared.RuntimeVersion)
+			(*existingManifest.Engine) = fmt.Sprintf("^%s", shared.EngineVersion)
 
 			// Save merged manifest
 			manifestJSON, err := json.MarshalIndent(existingManifest, "", "  ")

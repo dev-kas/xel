@@ -75,12 +75,12 @@ func DebugCommand() *cli.Command {
 				}
 
 				// Check Xel version constraint if specified
-				if manifest.Xel != "" {
+				if *manifest.Xel != "" {
 					// Skip version check in development mode (when version is empty)
 					if xShared.RuntimeVersion == "" {
 						color.New(color.FgYellow).Printf("Skipping Xel version check in development mode\n")
 					} else {
-						constraint, err := semver.NewConstraint(manifest.Xel)
+						constraint, err := semver.NewConstraint(*manifest.Xel)
 						if err != nil {
 							return fmt.Errorf("invalid Xel version constraint in manifest: %v", err)
 						}
@@ -92,18 +92,18 @@ func DebugCommand() *cli.Command {
 
 						if !constraint.Check(runtimeVersion) {
 							return fmt.Errorf("xel version %s does not satisfy required version %s from xel.json, please upgrade your runtime",
-								xShared.RuntimeVersion, manifest.Xel)
+								xShared.RuntimeVersion, *manifest.Xel)
 						}
 					}
 				}
 
 				// Check Engine version constraint if specified
-				if manifest.Engine != "" {
+				if *manifest.Engine != "" {
 					// Skip version check in development mode (when version is empty)
 					if xShared.EngineVersion == "" {
 						color.New(color.FgYellow).Printf("Skipping Engine version check in development mode\n")
 					} else {
-						constraint, err := semver.NewConstraint(manifest.Engine)
+						constraint, err := semver.NewConstraint(*manifest.Engine)
 						if err != nil {
 							return fmt.Errorf("invalid Engine version constraint in manifest: %v", err)
 						}
@@ -115,7 +115,7 @@ func DebugCommand() *cli.Command {
 
 						if !constraint.Check(engineVersion) {
 							return fmt.Errorf("engine version %s does not satisfy required version %s from xel.json, please upgrade your runtime",
-								xShared.EngineVersion, manifest.Engine)
+								xShared.EngineVersion, *manifest.Engine)
 						}
 					}
 				}
@@ -144,9 +144,9 @@ func DebugCommand() *cli.Command {
 			manifestConverted["description"] = &descVal
 			versionVal := values.MK_STRING(manifest.Version)
 			manifestConverted["version"] = &versionVal
-			xelVal := values.MK_STRING(manifest.Xel)
+			xelVal := values.MK_STRING(*manifest.Xel)
 			manifestConverted["xel"] = &xelVal
-			engineVal := values.MK_STRING(manifest.Engine)
+			engineVal := values.MK_STRING(*manifest.Engine)
 			manifestConverted["engine"] = &engineVal
 			mainVal := values.MK_STRING(manifest.Main)
 			manifestConverted["main"] = &mainVal
@@ -158,7 +158,7 @@ func DebugCommand() *cli.Command {
 			depsObj := values.MK_OBJECT(map[string]*shared.RuntimeValue{})
 			manifestConverted["deps"] = &depsObj
 			depsMap := make(map[string]*shared.RuntimeValue)
-			for k, v := range manifest.Deps {
+			for k, v := range *manifest.Deps {
 				depVal := values.MK_STRING(v)
 				depsMap[k] = &depVal
 			}

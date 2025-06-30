@@ -35,8 +35,9 @@ func XelDir() string {
 
 // Config represents the application configuration
 type Config struct {
-	DefaultTemplate string   `json:"DefaultTemplate"`
-	ModulePaths     []string `json:"ModulePaths"`
+	DefaultTemplate    string   `json:"DefaultTemplate"`
+	ModulePaths        []string `json:"ModulePaths"`
+	PackageRegistryURI string   `json:"PackageRegistryURI"`
 }
 
 // ProjectManifest represents the metadata and configuration of a Xel project
@@ -68,15 +69,17 @@ type Config struct {
 //	    "license": "MIT"
 //	}
 type ProjectManifest struct {
-	Name        string            `json:"name"`        // Project name
-	Description string            `json:"description"` // Project description
-	Version     string            `json:"version"`     // Project version
-	Xel         string            `json:"xel"`         // Required Xel runtime version
-	Engine      string            `json:"engine"`      // Required VirtLang engine version
-	Main        string            `json:"main"`        // Main entry point file
-	Deps        map[string]string `json:"deps"`        // Project dependencies
-	Author      string            `json:"author"`      // Project author
-	License     string            `json:"license"`     // Project license
+	Name        string             `json:"name"`                 // Project name
+	Description string             `json:"description"`          // Project description
+	Version     string             `json:"version"`              // Project version
+	Xel         *string            `json:"xel,omitempty"`        // Required Xel runtime version
+	Engine      *string            `json:"engine,omitempty"`     // Required VirtLang engine version
+	Main        string             `json:"main"`                 // Main entry point file
+	Deps        *map[string]string `json:"deps,omitempty"`       // Project dependencies
+	Author      string             `json:"author"`               // Project author
+	License     string             `json:"license"`              // Project license
+	Tags        []string           `json:"tags,omitempty"`       // Project tags
+	Deprecated  *string            `json:"deprecated,omitempty"` // Project deprecation message
 }
 
 // XelConfig holds the application configuration
@@ -127,8 +130,9 @@ func init() {
 	// Check if config file exists, if not create it with default values
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		XelConfig = Config{
-			DefaultTemplate: "default",
-			ModulePaths:     []string{filepath.Join(xelDir, "modules")},
+			DefaultTemplate:    "default",
+			ModulePaths:        []string{filepath.Join(xelDir, "modules")},
+			PackageRegistryURI: "https://pkg.xel.glitchiethedev.com/api/v1/",
 		}
 
 		configJSON, err := json.MarshalIndent(XelConfig, "", "  ")

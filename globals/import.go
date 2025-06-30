@@ -160,7 +160,7 @@ var Import = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environme
 		constraint := pkgConstraint.Value.(string)
 
 		// Resolve the module using the package manager to get its actual location
-		pkgManifestPath, pkgManifest, resolutionErr := helpers.ResolveModule(libname, constraint)
+		pkgManifestPath, pkgManifest, resolutionErr := helpers.ResolveModuleLocal(libname, constraint)
 		if resolutionErr != nil {
 			return nil, &errors.RuntimeError{
 				Message: fmt.Sprintf("Failed to resolve package '%s' (constraint: %s): %v",
@@ -182,15 +182,15 @@ var Import = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environme
 		addStringField("name", pkgManifest.Name)
 		addStringField("description", pkgManifest.Description)
 		addStringField("version", pkgManifest.Version)
-		addStringField("xel", pkgManifest.Xel)
-		addStringField("engine", pkgManifest.Engine)
+		addStringField("xel", *pkgManifest.Xel)
+		addStringField("engine", *pkgManifest.Engine)
 		addStringField("main", pkgManifest.Main)
 		addStringField("author", pkgManifest.Author)
 		addStringField("license", pkgManifest.License)
 
 		// Convert dependencies map to runtime format
-		depsMap := make(map[string]*shared.RuntimeValue, len(pkgManifest.Deps))
-		for depName, depConstraint := range pkgManifest.Deps {
+		depsMap := make(map[string]*shared.RuntimeValue, len(*pkgManifest.Deps))
+		for depName, depConstraint := range *pkgManifest.Deps {
 			depVal := values.MK_STRING(depConstraint)
 			depsMap[depName] = &depVal
 		}

@@ -1,7 +1,9 @@
 package cmds
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"xel/helpers"
 	"xel/shared"
@@ -20,60 +22,99 @@ func PackageCommands() *cli.Command {
 				Aliases: []string{"install"},
 				Usage:   "Add a package",
 				Action: func(c *cli.Context) error {
-					// Validate package name
-					packageName := c.Args().First()
-					if packageName == "" {
-						// TODO: Install packages listed in the cwd's manifest
-						return fmt.Errorf("package name is required")
-					}
-
-					// Split package name and version if provided
-					split := strings.Split(packageName, "@")
-					if len(split) > 2 {
-						return fmt.Errorf("invalid package format: %s", packageName)
-					}
-
-					var name, version string
-					switch len(split) {
-					case 1:
-						name = split[0]
-					case 2:
-						name = split[0]
-						version = split[1]
-					}
-
-					// Validate name
-					if len(strings.TrimSpace(name)) == 0 {
-						return fmt.Errorf("package name is required")
-					}
-
-					// Check if an installed package satisfies the requirements
-					versions := helpers.GetVersions(name)
-
-					if len(versions) != 0 && len(version) != 0 {
-						// TODO: Link the package
-						version, _, err := helpers.ResolveModule(name, version)
-						if err != nil {
-							return err
-						}
-
-						// TODO: Link the package
-						shared.ColorPalette.Warning.Printf("Package `%s@%s` already installed", name, version)
-						return nil
-					} else if len(versions) != 0 && len(version) == 0 {
-						// TODO: Link the package
-						shared.ColorPalette.Warning.Printf("Package `%s` already installed", name)
-						return nil
-					}
-
-					// download the package
-					manifest, err := helpers.ResolveOnline(name, version)
+					// Get current working directory
+					cwd, err := os.Getwd()
 					if err != nil {
 						return err
 					}
 
-					// TODO: Link the package
-					shared.ColorPalette.Info.Printf("Package `%s@%s` installed", name, manifest.Version)
+					// Get closest manifest
+					mainManifest, mainManifestPath, err := helpers.FetchManifest(cwd, cwd)
+					if err != nil {
+						return err
+					}
+
+					// Validate package name
+					for i := 0; i < c.Args().Len(); i++ {
+						packageName := c.Args().Get(i)
+						if packageName == "" {
+							return fmt.Errorf("package name is required")
+						}
+
+						// Split package name and version if provided
+						split := strings.Split(packageName, "@")
+						if len(split) > 2 {
+							return fmt.Errorf("invalid package format: %s", packageName)
+						}
+
+						var name, version string
+						switch len(split) {
+						case 0:
+							return fmt.Errorf("invalid package format: %s", packageName)
+						case 1:
+							name = strings.Join(split, "@")
+							version = "*"
+							if mainManifest.Deps != nil {
+								if ver, ok := (*mainManifest.Deps)[name]; ok {
+									version = ver
+								}
+							}
+
+						default:
+							name = strings.Join(split[:len(split)-1], "@")
+							version = split[len(split)-1]
+						}
+
+						// Validate name
+						if len(strings.TrimSpace(name)) == 0 {
+							return fmt.Errorf("package name is required")
+						}
+
+						// Check if an installed package satisfies the requirements
+						versions := helpers.GetVersions(name)
+
+						if len(versions) != 0 && len(version) != 0 && version != "latest" {
+							_, manifest, err := helpers.ResolveModuleLocal(name, version)
+							if err != nil {
+								return err
+							}
+
+							shared.ColorPalette.Warning.Printf("Package `%s@%s` already installed\n", name, manifest.Version)
+
+							if mainManifest.Deps == nil {
+								mainManifest.Deps = &map[string]string{}
+							}
+							(*mainManifest.Deps)[manifest.Name] = manifest.Version
+							manifestData, err := json.MarshalIndent(mainManifest, "", "  ")
+							if err != nil {
+								return err
+							}
+							if err := os.WriteFile(mainManifestPath, manifestData, 0644); err != nil {
+								return err
+							}
+							return nil
+						}
+
+						// download the package
+						manifest, err := helpers.DownloadModule(name, version)
+						if err != nil {
+							return err
+						}
+						
+						if mainManifest.Deps == nil {
+							mainManifest.Deps = &map[string]string{}
+						}
+						(*mainManifest.Deps)[manifest.Name] = manifest.Version
+						manifestData, err := json.MarshalIndent(mainManifest, "", "  ")
+						if err != nil {
+							return err
+						}
+						if err := os.WriteFile(mainManifestPath, manifestData, 0644); err != nil {
+							return err
+						}
+						
+						shared.ColorPalette.Info.Printf("Package `%s@%s` installed\n", name, manifest.Version)
+					}
 					return nil
 				},
 			},
