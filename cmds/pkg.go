@@ -33,17 +33,24 @@ func PackageCommands() *cli.Command {
 					// Get closest manifest
 					mainManifest, mainManifestPath, err := helpers.FetchManifest(cwd, cwd)
 					if err != nil {
-						return err
+						if err.Error() != "cannot find manifest" {
+							return err
+						}
 					}
 
 					// Lockfile integration
-					lockfilePath := filepath.Join(filepath.Dir(mainManifestPath), "xel.lock")
-					lockfileData, err := os.ReadFile(lockfilePath)
-					if err != nil {
-						if !os.IsNotExist(err) {
-							return err
+					lockfilePath := ""
+					if mainManifest != nil {
+						lockfilePath = filepath.Join(filepath.Dir(mainManifestPath), "xel.lock")
+					}
+					lockfileData := []byte("{}")
+					if lockfilePath != "" {
+						lockfileData, err = os.ReadFile(lockfilePath)
+						if err != nil {
+							if !os.IsNotExist(err) {
+								return err
+							}
 						}
-						lockfileData = []byte("{}")
 					}
 					var lockfile shared.Lockfile
 					if err := json.Unmarshal(lockfileData, &lockfile); err != nil {
@@ -71,7 +78,7 @@ func PackageCommands() *cli.Command {
 							case 1:
 								name = strings.Join(split, "@")
 								version = "*"
-								if mainManifest.Deps != nil {
+								if mainManifest != nil && mainManifest.Deps != nil {
 									if ver, ok := (*mainManifest.Deps)[name]; ok {
 										version = ver
 									}
@@ -98,6 +105,29 @@ func PackageCommands() *cli.Command {
 
 								shared.ColorPalette.Warning.Printf("Package `%s@%s` already installed\n", name, manifest.Version)
 
+								if mainManifest != nil {
+									if mainManifest.Deps == nil {
+										mainManifest.Deps = &map[string]string{}
+									}
+									(*mainManifest.Deps)[manifest.Name] = manifest.Version
+									manifestData, err := json.MarshalIndent(mainManifest, "", "  ")
+									if err != nil {
+										return err
+									}
+									if err := os.WriteFile(mainManifestPath, manifestData, 0644); err != nil {
+										return err
+									}
+								}
+								return nil
+							}
+
+							// download the package
+							manifestPath, manifest, err := helpers.DownloadModule(name, version, &lockfile)
+							if err != nil {
+								return err
+							}
+							
+							if mainManifest != nil {
 								if mainManifest.Deps == nil {
 									mainManifest.Deps = &map[string]string{}
 								}
@@ -109,27 +139,7 @@ func PackageCommands() *cli.Command {
 								if err := os.WriteFile(mainManifestPath, manifestData, 0644); err != nil {
 									return err
 								}
-								return nil
 							}
-
-							// download the package
-							manifestPath, manifest, err := helpers.DownloadModule(name, version, &lockfile)
-							if err != nil {
-								return err
-							}
-							
-							if mainManifest.Deps == nil {
-								mainManifest.Deps = &map[string]string{}
-							}
-							(*mainManifest.Deps)[manifest.Name] = manifest.Version
-							manifestData, err := json.MarshalIndent(mainManifest, "", "  ")
-							if err != nil {
-								return err
-							}
-							if err := os.WriteFile(mainManifestPath, manifestData, 0644); err != nil {
-								return err
-							}
-
 							for depName, depVersion := range *manifest.Deps {
 								exePath, err := os.Executable()
 								if err != nil {
@@ -158,12 +168,14 @@ func PackageCommands() *cli.Command {
 					}
 
 					// update lockfile
-					lockfileData, err = json.MarshalIndent(lockfile, "", "  ")
-					if err != nil {
-						return err
-					}
-					if err := os.WriteFile(lockfilePath, lockfileData, 0644); err != nil {
-						return err
+					if lockfilePath != "" {
+						lockfileData, err = json.MarshalIndent(lockfile, "", "  ")
+						if err != nil {
+							return err
+						}
+						if err := os.WriteFile(lockfilePath, lockfileData, 0644); err != nil {
+							return err
+						}
 					}
 					return nil
 				},

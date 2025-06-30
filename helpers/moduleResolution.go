@@ -453,6 +453,52 @@ func DownloadModuleOnline(moduleName string, constraint string) (string, *shared
 			return "", nil, "", "", "", err
 		}
 
+		// we also need to verify that this package version is compatible with the current version of xel
+		if shared.RuntimeVersion != "" { // Xel is not in development mode
+			constraint, err := semver.NewConstraint(v.Xel)
+			if err != nil {
+				shared.ColorPalette.Warning.Printf("Invalid Xel version constraint in manifest: %v\n", err)
+				continue
+			}
+
+			runtimeVersion, err := semver.NewVersion(shared.RuntimeVersion)
+			if err != nil {
+				shared.ColorPalette.Warning.Printf("Invalid runtime version format: %v\n", err)
+				continue
+			}
+
+			if !constraint.Check(runtimeVersion) {
+				shared.ColorPalette.Warning.Printf("Xel version %s does not satisfy required version %s from xel.json, please upgrade your runtime\n", shared.RuntimeVersion, v.Xel)
+				continue
+			}
+		} else { // Xel is in development mode
+			// we skip the version check
+			shared.ColorPalette.Warning.Println("Xel is in development mode, skipping version check")
+		}
+
+		// we also need to verify that this package version is compatible with the current version of engine
+		if shared.EngineVersion != "" { // Engine is not in development mode
+			constraint, err := semver.NewConstraint(v.Engine)
+			if err != nil {
+				shared.ColorPalette.Warning.Printf("Invalid engine version constraint in manifest: %v\n", err)
+				continue
+			}
+
+			engineVersion, err := semver.NewVersion(shared.EngineVersion)
+			if err != nil {
+				shared.ColorPalette.Warning.Printf("Invalid engine version format: %v\n", err)
+				continue
+			}
+
+			if !constraint.Check(engineVersion) {
+				shared.ColorPalette.Warning.Printf("Engine version %s does not satisfy required version %s from xel.json, please upgrade your engine\n", shared.EngineVersion, v.Engine)
+				continue
+			}
+		} else { // Engine is in development mode
+			// we skip the version check
+			shared.ColorPalette.Warning.Println("Engine is in development mode, skipping version check")
+		}
+
 		if constraint.Check(version) {
 			targetVersion = v
 			break
