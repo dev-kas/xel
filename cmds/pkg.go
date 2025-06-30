@@ -45,11 +45,15 @@ func PackageCommands() *cli.Command {
 					}
 					lockfileData := []byte("{}")
 					if lockfilePath != "" {
-						lockfileData, err = os.ReadFile(lockfilePath)
+						data, err := os.ReadFile(lockfilePath)
 						if err != nil {
 							if !os.IsNotExist(err) {
 								return err
+							} else {
+								lockfileData = []byte("{}")
 							}
+						} else {
+							lockfileData = data
 						}
 					}
 					var lockfile shared.Lockfile
@@ -184,12 +188,134 @@ func PackageCommands() *cli.Command {
 				Name:    "remove",
 				Aliases: []string{"uninstall"},
 				Usage:   "Remove a package",
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name: "global",
+						Aliases: []string{"g"},
+						Usage: "Removes the package from global modules",
+						Value: false,
+					},
+					&cli.BoolFlag{
+						Name: "local",
+						Aliases: []string{"l"},
+						Usage: "Removes the package from local modules",
+						Value: false,
+					},
+				},
 				Action: func(c *cli.Context) error {
-					// TODO: Implement package removal logic
-					// - Validate package name
-					// - Check if package is installed
-					// - Remove package files
-					// - Update package manifest
+					removalMode := "local"
+
+					// Get current working dir
+					cwd, err := os.Getwd()
+					if err != nil {
+						return err
+					}
+
+					// Get closest manifest
+					mainManifest, mainManifestPath, err := helpers.FetchManifest(cwd, cwd)
+					if err != nil {
+						return err
+					}
+					if mainManifest == nil {
+						removalMode = "global"
+					}
+
+					for i := 0; i < c.Args().Len(); i++ {
+						// Validate package name
+						if len(strings.TrimSpace(c.Args().Get(i))) == 0 {
+							return fmt.Errorf("package name is required")
+						}
+
+						packageName := strings.TrimSpace(c.Args().Get(i))
+						split := strings.Split(packageName, "@")
+						if len(split) > 2 {
+							return fmt.Errorf("invalid package format: %s", packageName)
+						}
+						var name, version string
+						switch len(split) {
+						case 0:
+							return fmt.Errorf("invalid package format: %s", packageName)
+						case 1:
+							name = strings.Join(split, "@")
+							version = "*"
+						default:
+							name = strings.Join(split[:len(split)-1], "@")
+							version = split[len(split)-1]
+						}
+
+						var ok bool
+						if mainManifest != nil {
+							_, ok = (*mainManifest.Deps)[name]
+						}
+						if !ok {
+							removalMode = "global"
+						}
+
+						manifestPath, _, err := helpers.ResolveModuleLocal(name, version)
+						if err != nil && removalMode != "local" {
+							removalMode = "local"
+						}
+
+						if mainManifest.Deps == nil {
+							removalMode = "global"
+						} else {
+							if _, ok := (*mainManifest.Deps)[name]; !ok {
+								removalMode = "global"
+							} else {
+								removalMode = "local"
+							}
+						}
+
+						globalFlag := c.Bool("global")
+						localFlag := c.Bool("local")
+						if globalFlag && localFlag {
+							return fmt.Errorf("cannot specify both global and local")
+						}
+						if globalFlag {
+							removalMode = "global"
+						} else if localFlag {
+							removalMode = "local"
+						}
+
+						if removalMode == "local" {
+							delete(*mainManifest.Deps, name)
+							manifestData, err := json.MarshalIndent(mainManifest, "", "  ")
+							if err != nil {
+								return err
+							}
+							if err := os.WriteFile(mainManifestPath, manifestData, 0644); err != nil {
+								return err
+							}
+							
+							lfPath := filepath.Join(filepath.Dir(mainManifestPath), "xel.lock")
+							lfData, err := os.ReadFile(lfPath)
+							if err != nil {
+								if !os.IsNotExist(err) {
+									return err
+								}
+							}
+							var lockfile shared.Lockfile
+							if err := json.Unmarshal(lfData, &lockfile); err != nil {
+								return err
+							}
+							delete(lockfile, name)
+							lfData, err = json.MarshalIndent(lockfile, "", "  ")
+							if err != nil {
+								return err
+							}
+							if err := os.WriteFile(lfPath, lfData, 0644); err != nil {
+								return err
+							}
+						} else {
+							if manifestPath == "" {
+								return fmt.Errorf("package `%s` not found", name)
+							}
+							if err := os.RemoveAll(filepath.Dir(manifestPath)); err != nil {
+								return err
+							}
+						}
+					}
+
 					return nil
 				},
 			},
