@@ -35,9 +35,10 @@ func XelDir() string {
 
 // Config represents the application configuration
 type Config struct {
-	DefaultTemplate    string   `json:"DefaultTemplate"`
-	ModulePaths        []string `json:"ModulePaths"`
-	PackageRegistryURI string   `json:"PackageRegistryURI"`
+	DefaultTemplate     string   `json:"DefaultTemplate"`
+	ModulePaths         []string `json:"ModulePaths"`
+	PackageRegistryURI  string   `json:"PackageRegistryURI"`
+	AllowInstallScripts bool     `json:"AllowInstallScripts"`
 }
 
 // ProjectManifest represents the metadata and configuration of a Xel project
@@ -140,6 +141,7 @@ func init() {
 			DefaultTemplate:    "default",
 			ModulePaths:        []string{filepath.Join(xelDir, "modules")},
 			PackageRegistryURI: "https://pkg.xel.glitchiethedev.com/api/v1/",
+			AllowInstallScripts: true,
 		}
 
 		configJSON, err := json.MarshalIndent(XelConfig, "", "  ")

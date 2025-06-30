@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -547,6 +548,29 @@ func DownloadFromTarball(url, algorithm, hash, name, version string) (string, *s
 	manifest := &shared.ProjectManifest{}
 	if err := json.Unmarshal(manifestBytes, manifest); err != nil {
 		return "", nil, err
+	}
+
+	// check for setup script
+	if shared.XelConfig.AllowInstallScripts {
+		setupScriptPath := filepath.Join(dest, "setup.xel")
+		if _, err := os.Stat(setupScriptPath); err == nil {
+			exePath, err := os.Executable()
+			if err != nil {
+				return "", nil, err
+			}
+			xelPath, err := filepath.EvalSymlinks(exePath)
+			if err != nil {
+				return "", nil, err
+			}
+			cmd := exec.Command(xelPath, "run", setupScriptPath)
+			cmd.Stderr = os.Stderr
+			cmd.Stdout = os.Stdout
+			cmd.Stdin = os.Stdin
+			cmd.Dir = dest
+			if err := cmd.Run(); err != nil {
+				return "", nil, fmt.Errorf("failed to run setup script: %s\n\nthis is likely not a problem with Xel itself, but with the module you are trying to install", err)
+			}
+		}
 	}
 
 	return manifestPath, manifest, nil
