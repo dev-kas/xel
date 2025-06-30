@@ -11,8 +11,8 @@ import (
 )
 
 var reduce = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environment.Environment) (*shared.RuntimeValue, *errors.RuntimeError) {
-	if len(args) != 3 {
-		return nil, &errors.RuntimeError{Message: "reduce() takes exactly 3 arguments"}
+	if len(args) < 2 || len(args) > 3 {
+		return nil, &errors.RuntimeError{Message: "reduce() takes exactly 2 or 3 arguments"}
 	}
 
 	if args[0].Type != shared.Array {
@@ -24,7 +24,10 @@ var reduce = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environme
 
 	array := args[0].Value.([]shared.RuntimeValue)
 	reducer := args[1]
-	acc := args[2]
+	acc := args[0]
+	if len(args) == 3 {
+		acc = args[2]
+	}
 
 	// Clone arr for passing to each call
 	copyArr := make([]shared.RuntimeValue, len(array))
