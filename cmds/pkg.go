@@ -323,20 +323,25 @@ func PackageCommands() *cli.Command {
 				Name:  "list",
 				Usage: "List installed packages",
 				Action: func(c *cli.Context) error {
-					// TODO: Implement package listing logic
-					// - Read package manifest
-					// - Format and display installed packages
-					return nil
-				},
-			},
-			{
-				Name:  "update",
-				Usage: "Update installed packages",
-				Action: func(c *cli.Context) error {
-					// TODO: Implement package update logic
-					// - Check for package updates
-					// - Download and install updates
-					// - Update package manifest
+					cwd, err := os.Getwd()
+					if err != nil {
+						return err
+					}
+					mainManifest, _, err := helpers.FetchManifest(cwd, cwd)
+					if err != nil {
+						return err
+					}
+					if mainManifest == nil {
+						return fmt.Errorf("no manifest found")
+					}
+					shared.ColorPalette.Info.Printf("Installed Packages in %s@%s:\n", mainManifest.Name, mainManifest.Version)
+					shared.ColorPalette.Info.Println(strings.Repeat("-", 20))
+					for name, version := range *mainManifest.Deps {
+						shared.ColorPalette.Info.Printf("- %s@%s\n", name, version)
+					}
+					if len(*mainManifest.Deps) == 0 {
+						shared.ColorPalette.Info.Println("No packages installed")
+					}
 					return nil
 				},
 			},
