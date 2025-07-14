@@ -83,7 +83,7 @@ var copy = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environment
 	} else {
 		err = _copyFile(fromPath, toPath)
 	}
-	
+
 	if err != nil {
 		return nil, &errors.RuntimeError{Message: err.Error()}
 	}

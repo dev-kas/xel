@@ -86,9 +86,10 @@ var spawn = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environmen
 		status := thread.Status
 		thread.mu.Unlock()
 
-		if status == KILLED {
+		switch status {
+		case KILLED:
 			return nil, &errors.RuntimeError{Message: "Thread has been killed"}
-		} else if status == FINISHED {
+		case FINISHED:
 			thread.mu.Lock()
 			res := thread.ReturnValue
 			thread.mu.Unlock()

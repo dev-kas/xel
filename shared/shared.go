@@ -138,9 +138,9 @@ func init() {
 	// Check if config file exists, if not create it with default values
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		XelConfig = Config{
-			DefaultTemplate:    "default",
-			ModulePaths:        []string{filepath.Join(xelDir, "modules")},
-			PackageRegistryURI: "https://pkg.xel.glitchiethedev.com/api/v1/",
+			DefaultTemplate:     "default",
+			ModulePaths:         []string{filepath.Join(xelDir, "modules")},
+			PackageRegistryURI:  "https://pkg.xel.glitchiethedev.com/api/v1/",
 			AllowInstallScripts: true,
 		}
 

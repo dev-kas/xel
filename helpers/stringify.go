@@ -17,7 +17,7 @@ type visitedInfo struct {
 const (
 	maxLineLength = 80
 	itemsPerLine  = 12
-	maxDepth     = 25
+	maxDepth      = 25
 )
 
 // Stringify converts a RuntimeValue to its string representation.
@@ -151,7 +151,7 @@ func stringifyWithVisited(value shared.RuntimeValue, internal bool, visited map[
 			if val.IsNil() {
 				break
 			}
-			
+
 			// For maps, we need to get the pointer to the map header
 			if val.Kind() == reflect.Map {
 				// This gets the underlying map header pointer in a way that's safe for the garbage collector
@@ -161,7 +161,7 @@ func stringifyWithVisited(value shared.RuntimeValue, internal bool, visited map[
 				// For other reference types, we can use the built-in Pointer() method
 				ptr = val.Pointer()
 			}
-			
+
 			if info, exists := visited[ptr]; exists {
 				// If we've seen this reference before, show where it was first referenced
 				// If the path is the same as the current path, it's a self-reference

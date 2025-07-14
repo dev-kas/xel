@@ -27,10 +27,10 @@ var user = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environment
 	shellVal := values.MK_STRING(os.Getenv("SHELL"))
 
 	retVal := values.MK_OBJECT(map[string]*shared.RuntimeValue{
-		"name": &nameVal,
-		"uid":  &uidVal,
-		"gid":  &gidVal,
-		"home": &homeVal,
+		"name":  &nameVal,
+		"uid":   &uidVal,
+		"gid":   &gidVal,
+		"home":  &homeVal,
 		"shell": &shellVal,
 	})
 	return &retVal, nil

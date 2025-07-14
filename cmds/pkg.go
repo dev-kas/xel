@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"xel/helpers"
 	"xel/shared"
-	"os/exec"
 
 	"github.com/urfave/cli/v2"
 )
@@ -130,7 +130,7 @@ func PackageCommands() *cli.Command {
 							if err != nil {
 								return err
 							}
-							
+
 							if mainManifest != nil {
 								if mainManifest.Deps == nil {
 									mainManifest.Deps = &map[string]string{}
@@ -153,7 +153,7 @@ func PackageCommands() *cli.Command {
 								if err != nil {
 									return err
 								}
-								
+
 								cmd := exec.Command(xelPath, "pkg", "add", fmt.Sprintf("%s@%s", depName, depVersion))
 								cmd.Stderr = os.Stderr
 								cmd.Stdout = os.Stdout
@@ -162,7 +162,7 @@ func PackageCommands() *cli.Command {
 									return err
 								}
 							}
-							
+
 							shared.ColorPalette.Info.Printf("Package `%s@%s` installed\n", name, manifest.Version)
 						}
 						return nil
@@ -190,16 +190,16 @@ func PackageCommands() *cli.Command {
 				Usage:   "Remove a package",
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
-						Name: "global",
+						Name:    "global",
 						Aliases: []string{"g"},
-						Usage: "Removes the package from global modules",
-						Value: false,
+						Usage:   "Removes the package from global modules",
+						Value:   false,
 					},
 					&cli.BoolFlag{
-						Name: "local",
+						Name:    "local",
 						Aliases: []string{"l"},
-						Usage: "Removes the package from local modules",
-						Value: false,
+						Usage:   "Removes the package from local modules",
+						Value:   false,
 					},
 				},
 				Action: func(c *cli.Context) error {
@@ -286,7 +286,7 @@ func PackageCommands() *cli.Command {
 							if err := os.WriteFile(mainManifestPath, manifestData, 0644); err != nil {
 								return err
 							}
-							
+
 							lfPath := filepath.Join(filepath.Dir(mainManifestPath), "xel.lock")
 							lfData, err := os.ReadFile(lfPath)
 							if err != nil {

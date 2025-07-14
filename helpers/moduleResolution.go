@@ -338,18 +338,18 @@ func DownloadModuleGit(url string, constraint string) (string, *shared.ProjectMa
 }
 
 type RegistryPackageResp struct {
-	ID int `json:"id"`
-	GID int `json:"gid"`
-	Name string `json:"name"`
-	Latest int `json:"latest"`
-	Description string `json:"description"`
-	Author string `json:"author"`
-	RepoName string `json:"repo_name"`
-	RepoURL string `json:"url"`
-	MirrorURL string `json:"mirror"`
-	Tags []string `json:"tags"`
-	IsDeprecated bool `json:"isDeprecated"`
-	DeprecationReason string `json:"deprecatedReason"`
+	ID                int      `json:"id"`
+	GID               int      `json:"gid"`
+	Name              string   `json:"name"`
+	Latest            int      `json:"latest"`
+	Description       string   `json:"description"`
+	Author            string   `json:"author"`
+	RepoName          string   `json:"repo_name"`
+	RepoURL           string   `json:"url"`
+	MirrorURL         string   `json:"mirror"`
+	Tags              []string `json:"tags"`
+	IsDeprecated      bool     `json:"isDeprecated"`
+	DeprecationReason string   `json:"deprecatedReason"`
 }
 
 type RegistryPackageVersionRespMetadata struct {
@@ -358,22 +358,22 @@ type RegistryPackageVersionRespMetadata struct {
 		Minor int `json:"minor"`
 		Patch int `json:"patch"`
 	} `json:"semver"`
-	Version string `json:"version"`
-	Package int `json:"package"`
-	Downloads int `json:"downloads"`
-	License string `json:"license"`
-	DistMode string `json:"dist_mode"`
-	Xel string `json:"xel"`
-	Engine string `json:"engine"`
-	ID int `json:"id"`
-	GID int `json:"gid"`
+	Version   string `json:"version"`
+	Package   int    `json:"package"`
+	Downloads int    `json:"downloads"`
+	License   string `json:"license"`
+	DistMode  string `json:"dist_mode"`
+	Xel       string `json:"xel"`
+	Engine    string `json:"engine"`
+	ID        int    `json:"id"`
+	GID       int    `json:"gid"`
 }
 
 type RegistryPackageVersionResp struct {
 	Versions []RegistryPackageVersionRespMetadata
-	Total int `json:"total"`
-	Limit int `json:"limit"`
-	Offset int `json:"offset"`
+	Total    int `json:"total"`
+	Limit    int `json:"limit"`
+	Offset   int `json:"offset"`
 }
 
 type RegistryTarballMetadataResp struct {
@@ -382,19 +382,18 @@ type RegistryTarballMetadataResp struct {
 			Algorithm string `json:"algorithm"`
 			Hash      string `json:"hash"`
 		} `json:"integrity"`
-		Package int `json:"package"`
-		Version int `json:"version"`
-		URL     string `json:"url"`
-		SizeBytes int `json:"size_bytes"`
-		ID        int `json:"id"`
-		GID       int `json:"gid"`
-		Downloads int `json:"downloads"`
+		Package   int    `json:"package"`
+		Version   int    `json:"version"`
+		URL       string `json:"url"`
+		SizeBytes int    `json:"size_bytes"`
+		ID        int    `json:"id"`
+		GID       int    `json:"gid"`
+		Downloads int    `json:"downloads"`
 	} `json:"tarballs"`
 	Total  int `json:"total"`
 	Limit  int `json:"limit"`
 	Offset int `json:"offset"`
 }
-
 
 func DownloadModuleOnline(moduleName string, constraint string) (string, *shared.ProjectManifest, string, string, string, error) {
 	// Fetch the package details from the registry
@@ -403,7 +402,7 @@ func DownloadModuleOnline(moduleName string, constraint string) (string, *shared
 		return "", nil, "", "", "", err
 	}
 	defer resp.Body.Close()
-	
+
 	// Parse the response body
 	var packageDetails RegistryPackageResp
 	if err := json.NewDecoder(resp.Body).Decode(&packageDetails); err != nil {
@@ -416,13 +415,13 @@ func DownloadModuleOnline(moduleName string, constraint string) (string, *shared
 		return "", nil, "", "", "", err
 	}
 	defer resp.Body.Close()
-	
+
 	// Parse the response body
 	var versions RegistryPackageVersionResp
 	if err := json.NewDecoder(resp.Body).Decode(&versions); err != nil {
 		return "", nil, "", "", "", err
 	}
-	
+
 	// Sort it in descending order (new -> old)
 	sort.Slice(versions.Versions, func(i, j int) bool {
 		a := versions.Versions[i].Semver
@@ -515,7 +514,7 @@ func DownloadModuleOnline(moduleName string, constraint string) (string, *shared
 		return "", nil, "", "", "", err
 	}
 	defer resp.Body.Close()
-	
+
 	// Parse the response body
 	var tarballMetadata RegistryTarballMetadataResp
 	if err := json.NewDecoder(resp.Body).Decode(&tarballMetadata); err != nil {
@@ -530,7 +529,7 @@ func DownloadModuleOnline(moduleName string, constraint string) (string, *shared
 	if err != nil {
 		return "", nil, "", "", "", err
 	}
-	
+
 	return manifestPath, manifest, tarballMetadata.Tarballs[0].Integrity.Algorithm, tarballMetadata.Tarballs[0].Integrity.Hash, tarballMetadata.Tarballs[0].URL, nil
 }
 
@@ -547,7 +546,7 @@ func DownloadFromTarball(url, algorithm, hash, name, version string) (string, *s
 		return "", nil, err
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != http.StatusOK {
 		return "", nil, fmt.Errorf("failed to download tarball: %s", resp.Status)
 	}
@@ -557,7 +556,7 @@ func DownloadFromTarball(url, algorithm, hash, name, version string) (string, *s
 		return "", nil, err
 	}
 	defer out.Close()
-	
+
 	if _, err := io.Copy(out, resp.Body); err != nil {
 		return "", nil, err
 	}
@@ -573,7 +572,7 @@ func DownloadFromTarball(url, algorithm, hash, name, version string) (string, *s
 		// the format of this is mod-[hash of name]/[version]
 		// this kinda keeps uniqueness but still, its not the best option i could opt for...
 		fmt.Sprintf("mod-%x", sha256.Sum256([]byte(name))), version)
-	
+
 	err = os.MkdirAll(dest, 0755)
 	if err != nil {
 		return "", nil, err
@@ -630,14 +629,19 @@ func DownloadModule(moduleName string, version string, lockfile *shared.Lockfile
 	versionAliasTable := map[string]string{
 		"latest": ">= 0.0.0",
 		"stable": ">= 1.0.0",
-		"any": "*",
+		"any":    "*",
 	}
 
 	if _, ok := versionAliasTable[ver]; ok {
 		ver = versionAliasTable[ver]
 	}
 
-	var lockedModule struct{Algorithm string "json:\"algorithm\""; Hash string "json:\"hash\""; URL string "json:\"url\""; Version string "json:\"version\""}
+	var lockedModule struct {
+		Algorithm string "json:\"algorithm\""
+		Hash      string "json:\"hash\""
+		URL       string "json:\"url\""
+		Version   string "json:\"version\""
+	}
 	var ok bool
 	if lockfile != nil {
 		lockedModule, ok = (*lockfile)[moduleName]
@@ -659,15 +663,20 @@ func DownloadModule(moduleName string, version string, lockfile *shared.Lockfile
 		manifestPath, manifest, iAlgo, iHash, url, err = DownloadModuleOnline(moduleName, ver)
 		if err == nil {
 			if lockfile != nil {
-				(*lockfile)[moduleName] = struct{Algorithm string "json:\"algorithm\""; Hash string "json:\"hash\""; URL string "json:\"url\""; Version string "json:\"version\""}{
+				(*lockfile)[moduleName] = struct {
+					Algorithm string "json:\"algorithm\""
+					Hash      string "json:\"hash\""
+					URL       string "json:\"url\""
+					Version   string "json:\"version\""
+				}{
 					Algorithm: iAlgo,
-					Hash: iHash,
-					URL: url,
-					Version: manifest.Version,
+					Hash:      iHash,
+					URL:       url,
+					Version:   manifest.Version,
 				}
 			}
 		}
 	}
-	
+
 	return manifestPath, manifest, err
 }

@@ -17,14 +17,14 @@ import (
 	"xel/shared"
 
 	_ "xel/modules/array"
+	_ "xel/modules/classes"
 	_ "xel/modules/math"
+	_ "xel/modules/native"
+	_ "xel/modules/object"
+	_ "xel/modules/os"
 	_ "xel/modules/strings"
 	_ "xel/modules/threads"
 	_ "xel/modules/time"
-	_ "xel/modules/native"
-	_ "xel/modules/os"
-	_ "xel/modules/classes"
-	_ "xel/modules/object"
 
 	"github.com/chzyer/readline"
 	"github.com/dev-kas/virtlang-go/v4/environment"
