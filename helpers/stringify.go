@@ -138,7 +138,7 @@ func stringifyWithVisited(value shared.RuntimeValue, internal bool, visited map[
 		return "[Maximum depth exceeded]"
 	}
 
-	if value.Type == shared.Object || value.Type == shared.Array || value.Type == shared.ClassInstance {
+	if value.Type == shared.Nil || value.Type == shared.Object || value.Type == shared.Array || value.Type == shared.ClassInstance {
 		if value.Value == nil {
 			return "nil"
 		}
