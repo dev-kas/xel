@@ -10,9 +10,9 @@ import (
 	"path/filepath"
 
 	// Internal imports
-	"xel/helpers"
-	"xel/modules"
-	xShared "xel/shared"
+	"github.com/dev-kas/xel/helpers"
+	"github.com/dev-kas/xel/modules"
+	xShared "github.com/dev-kas/xel/shared"
 
 	// External dependencies
 	"github.com/dev-kas/virtlang-go/v4/environment"

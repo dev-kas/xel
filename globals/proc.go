@@ -1,7 +1,7 @@
 package globals
 
 import (
-	xShared "xel/shared"
+	xShared "github.com/dev-kas/xel/shared"
 
 	"github.com/dev-kas/virtlang-go/v4/shared"
 	"github.com/dev-kas/virtlang-go/v4/values"

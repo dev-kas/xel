@@ -9,8 +9,9 @@ import (
 	"strconv"
 	"strings"
 
-	"xel/helpers"
-	xShared "xel/shared"
+	"github.com/dev-kas/xel/helpers"
+
+	xShared "github.com/dev-kas/xel/shared"
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/chzyer/readline"

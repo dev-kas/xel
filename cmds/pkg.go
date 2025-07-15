@@ -7,8 +7,10 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"xel/helpers"
-	"xel/shared"
+
+	"github.com/dev-kas/xel/helpers"
+
+	"github.com/dev-kas/xel/shared"
 
 	"github.com/urfave/cli/v2"
 )

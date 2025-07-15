@@ -2,7 +2,7 @@ package globals
 
 import (
 	"fmt"
-	"xel/helpers"
+	"github.com/dev-kas/xel/helpers"
 
 	"github.com/dev-kas/virtlang-go/v4/environment"
 	"github.com/dev-kas/virtlang-go/v4/errors"

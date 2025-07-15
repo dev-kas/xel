@@ -9,8 +9,9 @@ import (
 
 	"github.com/urfave/cli/v2"
 
-	"xel/helpers"
-	"xel/shared"
+	"github.com/dev-kas/xel/helpers"
+
+	"github.com/dev-kas/xel/shared"
 )
 
 // TemplateCommand returns the cli.Command for the template command

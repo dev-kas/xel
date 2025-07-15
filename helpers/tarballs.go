@@ -13,7 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"xel/shared"
+	"github.com/dev-kas/xel/shared"
 )
 
 func ExtractTarGz(tarGzPath, targetDir string) error {

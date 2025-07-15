@@ -4,8 +4,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"xel/helpers"
-	xShared "xel/shared"
+	"github.com/dev-kas/xel/helpers"
+
+	xShared "github.com/dev-kas/xel/shared"
 
 	"github.com/dev-kas/virtlang-go/v4/environment"
 	"github.com/dev-kas/virtlang-go/v4/errors"

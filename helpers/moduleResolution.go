@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
-	"xel/shared"
+	"github.com/dev-kas/xel/shared"
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/go-git/go-git/v5"

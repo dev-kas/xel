@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"xel/shared"
+	"github.com/dev-kas/xel/shared"
 )
 
 // FetchManifest implements a recursive search for the project manifest file (xel.json).

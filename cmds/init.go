@@ -11,8 +11,9 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/urfave/cli/v2"
 
-	"xel/helpers"
-	"xel/shared"
+	"github.com/dev-kas/xel/helpers"
+
+	"github.com/dev-kas/xel/shared"
 )
 
 // InitCommand returns the cli.Command for the init command

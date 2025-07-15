@@ -1,4 +1,4 @@
-module xel
+module github.com/dev-kas/xel
 
 go 1.23.2
 

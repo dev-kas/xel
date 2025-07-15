@@ -10,7 +10,8 @@ import "C"
 import (
 	"fmt"
 	"unsafe"
-	"xel/shared"
+
+	"github.com/dev-kas/xel/shared"
 )
 
 type Library struct {

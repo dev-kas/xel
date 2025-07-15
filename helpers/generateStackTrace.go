@@ -3,7 +3,7 @@ package helpers
 import (
 	"path/filepath"
 
-	xShared "xel/shared"
+	xShared "github.com/dev-kas/xel/shared"
 
 	"github.com/dev-kas/virtlang-go/v4/debugger"
 )

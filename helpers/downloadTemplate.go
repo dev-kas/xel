@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/go-git/go-git/v5"
-	"xel/shared"
+	"github.com/dev-kas/xel/shared"
 )
 
 // DownloadTemplate downloads a template from a given URL to the templates directory
