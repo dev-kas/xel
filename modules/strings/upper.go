@@ -14,7 +14,6 @@ var upper = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environmen
 		return nil, &errors.RuntimeError{Message: "upper(string) takes one string argument"}
 	}
 	str := args[0].Value.(string)
-	str = str[1 : len(str)-1]
 	result := values.MK_STRING(strings.ToUpper(str))
 	return &result, nil
 })

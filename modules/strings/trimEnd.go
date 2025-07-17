@@ -14,7 +14,6 @@ var trimEnd = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environm
 		return nil, &errors.RuntimeError{Message: "trimEnd(string) takes one string argument"}
 	}
 	str := args[0].Value.(string)
-	str = str[1 : len(str)-1]
 	result := values.MK_STRING(strings.TrimRight(str, " \t\r\n"))
 	return &result, nil
 })

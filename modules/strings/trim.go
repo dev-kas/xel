@@ -14,7 +14,6 @@ var trim = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environment
 		return nil, &errors.RuntimeError{Message: "trim(string) takes one string argument"}
 	}
 	str := args[0].Value.(string)
-	str = str[1 : len(str)-1]
 	result := values.MK_STRING(strings.TrimSpace(str))
 	return &result, nil
 })

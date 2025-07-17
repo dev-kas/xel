@@ -15,7 +15,6 @@ var repeat = values.MK_NATIVE_FN(func(args []shared.RuntimeValue, env *environme
 	}
 
 	str := args[0].Value.(string)
-	str = str[1 : len(str)-1]
 	count := int(args[1].Value.(float64))
 	if count < 0 {
 		return nil, &errors.RuntimeError{Message: "count must be non-negative"}
