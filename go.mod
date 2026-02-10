@@ -1,13 +1,13 @@
 module github.com/dev-kas/xel
 
-go 1.23.2
+go 1.24.0
 
 require (
 	github.com/Masterminds/semver/v3 v3.4.0
 	github.com/chzyer/readline v1.5.1
 	github.com/dev-kas/virtlang-go/v4 v4.1.1
 	github.com/fatih/color v1.18.0
-	github.com/go-git/go-git/v5 v5.16.4
+	github.com/go-git/go-git/v5 v5.16.5
 	github.com/urfave/cli/v2 v2.27.7
 )
 
@@ -32,8 +32,8 @@ require (
 	github.com/skeema/knownhosts v1.3.1 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect
-	golang.org/x/crypto v0.37.0 // indirect
-	golang.org/x/net v0.39.0 // indirect
-	golang.org/x/sys v0.32.0 // indirect
+	golang.org/x/crypto v0.45.0 // indirect
+	golang.org/x/net v0.47.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
